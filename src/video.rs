@@ -1,9 +1,9 @@
 use glow::*;
-use crate::ct_renderer::*;
-use crate::simple_renderer::*;
-use crate::texture_renderer::*;
+use crate::renderers::ct_renderer::*;
+use crate::renderers::simple_renderer::*;
+use crate::renderers::texture_renderer::*;
 use crate::scene::*;
-use crate::font_rendering::*;
+use crate::renderers::font_rendering::*;
 
 pub struct Video {
     pub gl: glow::Context,

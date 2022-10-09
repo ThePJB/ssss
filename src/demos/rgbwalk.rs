@@ -1,12 +1,6 @@
-use crate::{scene::{DoFrame, FrameOutputs}, kinput::FrameInputState, kmath::{chance, kuniform}};
+use crate::{scene::{DoFrame, FrameOutputs}, kinput::FrameInputState};
 use crate::kmath::*;
 use crate::texture_buffer::*;
-
-// this could so easily be a map for a game. different walkers, walkers have rules when they meet certain conditions eg walk on another walkers tile, you die, or swap to going straight
-// what about a UTM with made up rules, like from a given colour you set the colour to something and set the tile to something and move in a certain direction. might start getting weird patterns
-// seed = r ^ g ^ b or r << 16 | g << 8 | b and dir is khash(seed), head colour is khash(seed) and tile colour is head colour. id expect it to find cycles
-// does this look like percolation? percolation looks like a map for a game
-// give the walker a tendency to maintain its velocity, or let it move 8ways
 
 pub struct RGBWalk {
     grid: Vec<Vec4>,
@@ -22,7 +16,6 @@ pub struct RGBWalk {
 
 impl RGBWalk {
     pub fn new(w: usize, h: usize) -> RGBWalk {
-        let seed = 69;
         let head_colour = [0, 255, 255];
 
         let head_x = (w/2) as i32;
@@ -37,7 +30,7 @@ impl RGBWalk {
             head_colour,
             head_x,
             head_y,
-            steps_per_frame: 10000,
+            steps_per_frame: 100,
         }
     }
 }

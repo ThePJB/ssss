@@ -22,17 +22,6 @@ pub struct Percoviz {
     stale: bool,
 }
 
-// what controls do we even want: next seed, change ratio
-// noise terrains
-// also noise for p
-// also palette selection??
-// also hsv like I want the palette to be N points of given hue
-
-// what about the uniform coupling
-// oh its like uniform weights and theres a cutoff at p
-// so its the same if both are 50%
-// could do it on a different graph ie voronoi
-
 impl Percoviz {
     pub fn new(w: usize, h: usize) -> Percoviz {
         let mut x = Percoviz {
@@ -43,7 +32,7 @@ impl Percoviz {
             edges_above: Vec::new(),
             edges_left: Vec::new(),
             edge_chance: 0.5,
-            edge_chance_slider: FloatSlider::new(0.5, 0.0, 1.0, "pc".to_string()),
+            edge_chance_slider: FloatSlider::new(0.5, 0.0, 1.0, "coarse".to_string()),
             edge_chance_fine_slider: FloatSlider::new(0.0, -0.01, 0.01, "fine".to_string(),),
             stale: true,
         };
@@ -83,8 +72,8 @@ impl Percoviz {
                     ff_stack.push(start_idx);
                     while let Some(idx) = ff_stack.pop() {
                         for n in 0..4 {
-                            let mut n_idx;
-                            let mut edge;
+                            let n_idx;
+                            let edge;
                             if n == 0 {
                                 if idx % self.w == 0 {
                                     continue;
@@ -123,10 +112,6 @@ impl Percoviz {
 
         println!("run perc took {:?}", tstart.elapsed().unwrap());
     }
-
-    pub fn dump_png(&self) {
-
-    } 
 }
 
 impl DoFrame for Percoviz {
@@ -192,5 +177,4 @@ fn test_perco() {
         }
     }
     img.dump_to_file("perc.png");
-
 }

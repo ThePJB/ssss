@@ -1,4 +1,4 @@
-use crate::{scene::{DoFrame, FrameOutputs}, kinput::FrameInputState, kmath::{chance, kuniform}};
+use crate::{scene::{DoFrame, FrameOutputs}, kinput::FrameInputState};
 use crate::kmath::*;
 use crate::texture_buffer::*;
 use glutin::event::VirtualKeyCode;
@@ -72,16 +72,11 @@ impl RGBUTM {
     pub fn new(w: usize, h: usize, seed: u32) -> RGBUTM {
         let head_colour = [0, 255, 255];
 
-        // let head_x = (w/2) as i32;
-        // let head_y = (h/2) as i32;
         let head_x = 0;
         let head_y = 0;
 
         let base_colour = [khash(seed + 1712317) as u8, khash(seed + 1231247) as u8, khash(seed + 123123177) as u8];
-        let mut grid = vec![base_colour; w*h];
-        // for i in 0..w*h {
-        //     grid[i] = [khash(seed + 1712317*i as u32) as u8, khash(seed + 1231247*i as u32) as u8, khash(seed + 123123177*i as u32) as u8];
-        // }
+        let grid = vec![base_colour; w*h];
 
         RGBUTM {
             grid,
@@ -103,7 +98,7 @@ impl DoFrame for RGBUTM {
             *self = RGBUTM::new(self.w, self.h, self.seed + 1);
         }
 
-        for i in 0..self.steps_per_frame {
+        for _ in 0..self.steps_per_frame {
             let tile_value = self.grid[(self.w as i32 * self.head_y + self.head_x) as usize];
             let tile_seed = (tile_value[0] as u32) << 16 | (tile_value[1] as u32) << 8 | tile_value[0] as u32;
             // let tile_seed = (tile_value[0] ^ tile_value[1] ^ tile_value[2]) as u32;

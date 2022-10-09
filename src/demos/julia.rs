@@ -70,11 +70,6 @@ impl Julia {
                 // convert to float (im) for each pixel coordinate
                 let mut it = 0;
 
-                let mut x2 = 0.0;
-                let mut y2 = 0.0;
-                
-                let mut w = 0.0;
-
                 let jre = self.a_slider.curr;
                 let jim = self.b_slider.curr;
 

@@ -112,3 +112,5 @@ fn rec_noise(max: i32, seed: u32, x: f32, y: f32) -> f32 {
 
     acc
 }
+
+// dude imagine how trippy if the underlying noise moved: would have to render to a video, way too slow

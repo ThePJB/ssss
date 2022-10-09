@@ -1,16 +1,8 @@
-use std::f32::consts::PI;
-
 use crate::scene::*;
 use crate::kmath::*;
 use crate::texture_buffer::*;
 use crate::kinput::*;
 use glutin::event::VirtualKeyCode;
-
-// c such that |(((c^2 + c)^2 + c)^2 + c)^2 + ...| <= 2.0
-// so 1 - 1 + 1 - 1 + 1 - 1 for example
-// intuition for squaring a complex number?
-// recursive definition of the points? eg a point is in the mandelbrot set if the point it goes to is in the mandelbrot set
-//  but actually thats wrong because points can be out of the mandelbrot set. maybe if p^2 - c is in the mandelbrot set
 
 // julia set for ghost ship?
 // composition of ghost ship is nice because 4 quadrants

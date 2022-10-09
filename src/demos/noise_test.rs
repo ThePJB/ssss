@@ -1,5 +1,4 @@
 use crate::scene::*;
-use crate::widgets::*;
 use crate::kmath::*;
 use crate::texture_buffer::*;
 use crate::kinput::*;
@@ -19,15 +18,14 @@ pub struct NoiseTest {
 
 impl NoiseTest {
     pub fn new(w: usize, h: usize) -> NoiseTest {
-        let mut x = NoiseTest {
+        NoiseTest {
             w,
             h,
             seed: 69,
             stale: true,
             grid: vec![0.0; w*h],
             max: 0.0,
-        };
-        x
+        }
     }
 
     pub fn run_perc(&mut self) {

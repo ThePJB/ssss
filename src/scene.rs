@@ -1,5 +1,5 @@
-use crate::font_rendering::*;
-use crate::simple_renderer::*;
+use crate::renderers::font_rendering::*;
+use crate::renderers::simple_renderer::*;
 use crate::kinput::*;
 use crate::texture_buffer::*;
 use crate::kmath::*;
@@ -25,19 +25,3 @@ impl FrameOutputs {
 pub trait DoFrame {
     fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs);
 }
-
-pub struct Scene {
-    pub name: String,
-    pub logic: Box<dyn DoFrame>,
-}
-
-// yea traits are a bit dogshit
-// scene initialization: pass in a SceneInitState
-
-// I need to do some basic ass shit: a table of function pointers
-// damn I want a GC lol.
-
-// so you could use function pointers but you miss out on the T for retained state
-
-// let me clone stuff!!!!
-// the point is having an arbitrary sized type

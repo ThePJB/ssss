@@ -127,7 +127,7 @@ impl DoFrame for Mandelbrot {
 
         if let Some(path_c) = self.path_c {
             let mut zold = Complex::new(0.0, 0.0);
-            for i in 0..100 {
+            for _ in 0..100 {
                 let znew = zold*zold + path_c;
     
                 // line start and end - transform to where canvas is. from self.r to screen rect

@@ -1,5 +1,5 @@
 use crate::kmath::*;
-use crate::ct_renderer::*;
+use crate::renderers::ct_renderer::*;
 
 pub fn glyph_buffer_to_canvas(buf: &GlyphBuffer, a: f32) -> CTCanvas {
     let clip_fn = |c: u8| {

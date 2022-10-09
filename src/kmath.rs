@@ -1,6 +1,4 @@
-use std::mem;
-
-pub static PI: f32 = std::f32::consts::PI;
+pub use std::f32::consts::PI;
 
 /***************************************************
  * Easing
@@ -8,11 +6,6 @@ pub static PI: f32 = std::f32::consts::PI;
 pub fn lerp(x1: f32, x2: f32, t: f32) -> f32 {
     x1 * (1.0 - t) + x2 * t
 }
-
-// pub fn smoothstep(x1: f32, x2: f32, t: f32) -> f32 {
-//     let t = t*t*(3.0-2.0*t);
-//     lerp(x1, x2, t)
-// }
 
 pub fn unlerp(x: f32, t1: f32, t2: f32) -> f32 {
     (x - t1) / (t2 - t1)
@@ -635,22 +628,4 @@ impl Triangle {
         Rect { x: min_x, y: min_y, w: max_x - min_x, h: max_y - min_y }
 
     }
-}
-
-#[test]
-pub fn test_lerp() {
-    let r1 = Rect::new(0.0, 0.0, 1.0, 1.0);
-    let r2 = Rect::new(1.0, 0.0, 1.0, 1.0);
-    assert_eq!(r1.lerp(r2, 0.5), Rect::new(0.5, 0.0, 1.0, 1.0));
-    assert_eq!(r1.lerp(r2, 0.3), Rect::new(0.3, 0.0, 1.0, 1.0));
-
-    let r1 = Rect::new(0.0, 0.0, 1.0, 1.0);
-    let r2 = Rect::new(1.0, 1.0, 1.0, 1.0);
-    assert_eq!(r1.lerp(r2, 0.5), Rect::new(0.5, 0.5, 1.0, 1.0));
-    assert_eq!(r1.lerp(r2, 0.3), Rect::new(0.3, 0.3, 1.0, 1.0));
-
-    let r1 = Rect::new(0.0, 0.0, 1.0, 1.0);
-    let r2 = Rect::new(1.0, 1.0, 2.0, 1.0);
-    assert_eq!(r1.lerp(r2, 0.5), Rect::new(0.5, 0.5, 1.5, 1.0));
-    assert_eq!(r1.lerp(r2, 0.3), Rect::new(0.3, 0.3, 1.3, 1.0));
 }

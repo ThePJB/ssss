@@ -4,12 +4,6 @@ use crate::texture_buffer::*;
 use crate::kinput::*;
 use glutin::event::VirtualKeyCode;
 
-// c such that |(((c^2 + c)^2 + c)^2 + c)^2 + ...| <= 2.0
-// so 1 - 1 + 1 - 1 + 1 - 1 for example
-// intuition for squaring a complex number?
-// recursive definition of the points? eg a point is in the mandelbrot set if the point it goes to is in the mandelbrot set
-//  but actually thats wrong because points can be out of the mandelbrot set. maybe if p^2 - c is in the mandelbrot set
-
 pub struct BurningShip {
     w: usize,
     h: usize,
@@ -125,7 +119,7 @@ impl DoFrame for BurningShip {
 
         if let Some(path_c) = self.path_c {
             let mut zold = Vec2::new(0.0, 0.0);
-            for i in 0..100 {
+            for _ in 0..100 {
                 let znew = Vec2::new(zold.x.abs(), zold.y.abs());
                 let znew = znew.complex_mul(znew) + path_c;
     

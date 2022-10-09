@@ -9,3 +9,4 @@ pub mod rgbutm;
 pub mod lvlwalk;
 pub mod frac_test;
 pub mod noise_test;
+pub mod voronoinoi;

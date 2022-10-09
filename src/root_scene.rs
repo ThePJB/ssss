@@ -1,6 +1,5 @@
 use crate::demos::burning_ship::BurningShip;
 use crate::demos::frac_test::FracTest;
-use crate::demos::lvlwalk;
 use crate::demos::pp_fert::PredatorPreyFert;
 use crate::scene::*;
 use crate::demos::predator_prey::*;
@@ -101,7 +100,7 @@ impl DoFrame for RootScene {
             }
         }
 
-        if (self.show) {
+        if self.show {
             outputs.canvas.put_rect(inputs.screen_rect.child(0.0, 0.0, 0.15, 1.0), 5.0, Vec4::new(0.5, 0.5, 0.5, 0.5));
             for i in 0..self.names.len() {
                 let x = 0.0;

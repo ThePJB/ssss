@@ -1,13 +1,11 @@
 use crate::kmath::*;
 
 use std::collections::HashSet;
-use std::collections::HashMap;
 use std::time::{SystemTime, Instant, Duration};
 
 use glutin::event::VirtualKeyCode;
 
 use glutin::event::ElementState;
-use glutin::event::MouseButton;
 use glutin::event::Event;
 use glutin::event::WindowEvent::KeyboardInput;
 use glutin::event::WindowEvent::MouseInput;

@@ -1,4 +1,4 @@
-use crate::{scene::{DoFrame, FrameOutputs}, kinput::FrameInputState, kmath::{chance, kuniform}};
+use crate::{scene::{DoFrame, FrameOutputs}, kinput::FrameInputState};
 use crate::kmath::*;
 use crate::texture_buffer::*;
 
@@ -19,12 +19,6 @@ pub struct PredatorPreyFert {
     ferts: Vec<f32>,
     w: usize,
     h: usize,
-
-    seed: u32,
-
-    initial_pred: f32,
-    initial_prey: f32,
-    initial_food: f32,
 
     p_food: f32,
     e_food: f32,
@@ -83,10 +77,6 @@ impl PredatorPreyFert {
             ferts,
             w,
             h,
-            seed,
-            initial_pred,
-            initial_prey,
-            initial_food,
             p_food: 0.01,
             e_food: 0.2,
             prey_e_reproduce: 0.6,
@@ -301,10 +291,5 @@ impl DoFrame for PredatorPreyFert {
             println!("grass: {} prey: {} pred: {}", self.num_food, self.num_prey, self.num_pred);
             println!("grass: {} prey: {} pred: {}", actual_num_food, actual_num_prey, actual_num_pred);
         }
-
-
-
-
-
     }
 }

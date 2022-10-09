@@ -6,24 +6,6 @@
  * Shift click - zoom in (only on some)
  * Ctrl click - zoom out (only on some)
 
-// you could define a fractal such that its in it if the unit circle is in it or the thing a bit above it is in it
-
-You can tell that the mandelbrot set, julia set are self referential
-
-can you sneak a -c into the mandelbrot set to make it more self referential? ie trajectories never go outside
-
-
-I should probably start using transformation matrices
-possible fractals: things you can do to a Vec2
-if mandelbrot is // p such that |(((p^2 + p)^2 + p)^2 + p)^2 + ...| <= 2.0
-julia is p such that |(((p2 + p)^2 + p)^2 + ...| <= 2.0
-just snuck in a constant at the start
-what if we defined a fractal as a dual process of 2 points fighting, ie subtracting
-(p1^2 - p2^2)^2 + p1)^2 - p2^2 ...
-
-mandelbrot: z = 0 same as z = c or z = -1, z = 2c same as z = -2c??
-but i expected orbits to stay contained. not sure if my orbits were right
-
 # TODO
  * font rendering
  * clean up, put on gh
@@ -41,7 +23,7 @@ but i expected orbits to stay contained. not sure if my orbits were right
 * percolizer could go all the way down or all the way up to change seed
 * PP imagine a matrix of 'what eats what'
 
-## Evolving predator prey
+## Predator Prey
 Just need parameters where more not necessarily == better
  * per parameter mutation rate
  * chance to skip turn: lets you save energy: save next turn as well
@@ -54,3 +36,14 @@ Just need parameters where more not necessarily == better
 
  some of these are just for adapting but red and green is definite niche material
  imagine evolving a matrix... thats like the structure of a nn
+
+
+## Fractals
+You can tell that the mandelbrot set, julia set are self referential
+
+possible fractals: things you can do to a Vec2
+if mandelbrot is // p such that |(((p^2 + p)^2 + p)^2 + p)^2 + ...| <= 2.0
+julia is p such that |(((p2 + p)^2 + p)^2 + ...| <= 2.0
+just snuck in a constant at the start
+what if we defined a fractal as a dual process of 2 points fighting, ie subtracting
+(p1^2 - p2^2)^2 + p1)^2 - p2^2 ...

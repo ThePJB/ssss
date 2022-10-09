@@ -1,10 +1,7 @@
-use crate::demos::predator_prey::PredatorPrey;
 use crate::kinput::*;
 use crate::root_scene::RootScene;
 use crate::scene::*;
 use crate::video::*;
-use crate::demos::percoviz::*;
-use crate::demos::mandelbrot::*;
 use glow::HasContext;
 use glutin::{event_loop::*, event::{Event, WindowEvent}};
 

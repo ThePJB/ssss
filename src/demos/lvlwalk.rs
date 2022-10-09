@@ -1,4 +1,4 @@
-use crate::{scene::{DoFrame, FrameOutputs}, kinput::FrameInputState, kmath::{chance, kuniform}};
+use crate::{scene::{DoFrame, FrameOutputs}, kinput::FrameInputState, kmath::{kuniform}};
 use crate::kmath::*;
 use crate::texture_buffer::*;
 use glutin::event::VirtualKeyCode;
@@ -36,12 +36,6 @@ pub struct LevelWalk {
 
 impl LevelWalk {
     pub fn new(w: usize, h: usize) -> LevelWalk {
-        let seed = 69;
-        let head_colour = [0, 255, 255];
-
-        let head_x = (w/2) as i32;
-        let head_y = (h/2) as i32;
-
         let grid = vec![Vec4::new(0.0, 0.0, 0.0, 1.0); w*h];
 
         LevelWalk {
