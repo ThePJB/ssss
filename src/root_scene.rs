@@ -1,8 +1,16 @@
+use crate::demos::burning_ship::BurningShip;
+use crate::demos::frac_test::FracTest;
+use crate::demos::lvlwalk;
+use crate::demos::pp_fert::PredatorPreyFert;
 use crate::scene::*;
 use crate::demos::predator_prey::*;
 use crate::demos::percoviz::*;
 use crate::demos::mandelbrot::*;
 use crate::demos::julia::*;
+use crate::demos::rgbwalk::*;
+use crate::demos::rgbutm::*;
+use crate::demos::lvlwalk::*;
+use crate::demos::noise_test::*;
 use crate::kmath::*;
 use glutin::event::VirtualKeyCode;
 // scene struct or 
@@ -15,6 +23,9 @@ use glutin::event::VirtualKeyCode;
 // maybe this is fine, though they all smash the gpu at once
 
 // i spose now i gotta add the menu
+// shit the first one is queening a chessboard
+
+
 
 pub struct RootScene {
     curr_scene: Option<Box<dyn DoFrame>>,
@@ -32,6 +43,13 @@ impl RootScene {
                 "Predator Prey".to_owned(),
                 "Mandelbrot".to_owned(),
                 "Julia".to_owned(),
+                "Burning Ship".to_owned(),
+                "Predator Prey Fert".to_owned(),
+                "RGBWalk".to_owned(),
+                "RGBUTM".to_owned(),
+                "lvlwalk".to_owned(),
+                "frac test".to_owned(),
+                "noise test".to_owned(),
             ],
             idx: 0,
             show: false,
@@ -44,6 +62,13 @@ impl RootScene {
             1 => Box::new(PredatorPrey::new(400,400)),
             2 => Box::new(Mandelbrot::new(400, 400)),
             3 => Box::new(Julia::new(400, 400)),
+            4 => Box::new(BurningShip::new(800, 800)),
+            5 => Box::new(PredatorPreyFert::new(400, 400)),
+            6 => Box::new(RGBWalk::new(400, 400)),
+            7 => Box::new(RGBUTM::new(200, 200, 0)),
+            8 => Box::new(LevelWalk::new(800, 800)),
+            9 => Box::new(FracTest::new(800, 800, 0)),
+            10 => Box::new(NoiseTest::new(800, 800)),
             _ => panic!("out of range")
         })
     }

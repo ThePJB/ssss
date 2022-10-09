@@ -455,7 +455,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "kdemo"
+name = "kdemos"
 version = "0.1.0"
 dependencies = [
  "assert_hex",

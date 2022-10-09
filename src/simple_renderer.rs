@@ -149,4 +149,15 @@ impl SimpleCanvas {
         self.put_triangle(r.tl(), r.tr(), r.bl(), depth, colour);
         self.put_triangle(r.bl(), r.tr(), r.br(), depth, colour);
     }
+    
+    pub fn put_quad(&mut self, a: Vec2, b: Vec2, c: Vec2, d: Vec2, depth: f32, colour: Vec4) {
+        self.put_triangle(a,b,c, depth, colour);
+        self.put_triangle(b,d,c, depth, colour);
+    }
+
+    pub fn put_line(&mut self, a: Vec2, b: Vec2, w: f32, depth: f32, colour: Vec4) {
+        let v = (b - a).normalize();
+        let wv = w/2.0 * Vec2::new(-v.y, -v.x);
+        self.put_quad(a + wv, b + wv, a - wv, b - wv, depth, colour);
+    }
 }

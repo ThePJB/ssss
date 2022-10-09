@@ -1,4 +1,11 @@
 pub mod percoviz;
 pub mod mandelbrot;
+pub mod burning_ship;
 pub mod julia;
 pub mod predator_prey;
+pub mod pp_fert;
+pub mod rgbwalk;
+pub mod rgbutm;
+pub mod lvlwalk;
+pub mod frac_test;
+pub mod noise_test;

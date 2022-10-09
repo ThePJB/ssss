@@ -51,9 +51,9 @@ impl Julia {
             stale: true,
             buf: Vec::new(),
             colour_palette: colour_palette,
-            a_slider: FloatSlider::new(0.0, -(2.0f32.sqrt()), 2.0f32.sqrt(), "re".to_string()),
+            a_slider: FloatSlider::new(0.25, -(2.0f32.sqrt()), 2.0f32.sqrt(), "re".to_string()),
             b_slider: FloatSlider::new(0.0, -(2.0f32.sqrt()), 2.0f32.sqrt(), "im".to_string(),),
-            r_slider: FloatSlider::new(1.0, 0.0, 2.0, "mag".to_string()),
+            r_slider: FloatSlider::new(0.25, 0.0, 2.0, "mag".to_string()),
             theta_slider: FloatSlider::new(0.0, -PI, PI, "angle".to_string(),),
         };
         x.compute();
@@ -83,6 +83,7 @@ impl Julia {
 
                 let mut z = Complex::new(x0, y0);
                 let c = Complex::new(jre, jim);
+                // let c = Complex::new(x0, y0);    // the mandelbrot set is the julia set but c at z = z
                 while z.re * z.re + z.im * z.im < 4.0 && it < MAX_ITERATIONS {
                     z = z*z + c;
                     it += 1;

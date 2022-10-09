@@ -1,10 +1,10 @@
+use std::f32::consts::PI;
+
 use crate::scene::*;
 use crate::kmath::*;
 use crate::texture_buffer::*;
 use crate::kinput::*;
 use glutin::event::VirtualKeyCode;
-
-use num::complex::Complex;
 
 // c such that |(((c^2 + c)^2 + c)^2 + c)^2 + ...| <= 2.0
 // so 1 - 1 + 1 - 1 + 1 - 1 for example
@@ -12,7 +12,32 @@ use num::complex::Complex;
 // recursive definition of the points? eg a point is in the mandelbrot set if the point it goes to is in the mandelbrot set
 //  but actually thats wrong because points can be out of the mandelbrot set. maybe if p^2 - c is in the mandelbrot set
 
-pub struct Mandelbrot {
+// julia set for ghost ship?
+// composition of ghost ship is nice because 4 quadrants
+
+fn frac_fun(p1: Vec2, p2: Vec2, it: i32) -> Vec2 {
+    // let p2 = p2.complex_mul(p2).complex_mul(p) + p2; // p1p2 no work lol
+    // mandelbrot
+    p1.complex_mul(p1) + p2
+
+    // let rv = Vec2::new_r_theta(1.0, it as f32 * 137.5 * ( 180.0 / PI));
+    // p1.complex_mul(p1).complex_mul(rv) + p2
+    // p1.x * p1 + p1.y * p1 + p2
+    // p1.complex_mul(p1) + p2 + p1.
+
+    // oh shit evenbrot is like ^4
+            
+    // p1.complex_mul(p1).complex_mul(p1).complex_mul(p1) + p2
+    //burning ship
+    // let z = Vec2::new(p1.x.abs(), p1.y.abs());
+    // z.complex_mul(z) + p2
+
+    // (p1.complex_mul(p1) + p2).complex_mul()
+
+    // could do something cool with it, like this weird roatte thing
+}
+
+pub struct FracTest {
     w: usize,
     h: usize,
     r: Rect,
@@ -21,13 +46,15 @@ pub struct Mandelbrot {
 
     stale: bool,
 
-    path_c: Option<Complex<f32>>,
+    path_c: Option<Vec2>,
+
+    seed: u32,
 }
 
 const MAX_ITERATIONS: i32 = 160;
 
-impl Mandelbrot {
-    pub fn new(w: usize, h: usize) -> Mandelbrot {
+impl FracTest {
+    pub fn new(w: usize, h: usize, seed: u32) -> FracTest {
         let mut colour_palette = Vec::new();
 
         colour_palette.push(Vec4::new(0.0, 0.0, 0.0, 1.0));
@@ -43,7 +70,7 @@ impl Mandelbrot {
             colour_palette.push(start.lerp(end, i as f32/(MAX_ITERATIONS/2) as f32));
         };
 
-        let mut x = Mandelbrot {
+        let mut x = FracTest {
             w,
             h,
             r: Rect::new(-2.0, -1.5, 3.0, 3.0),
@@ -51,6 +78,7 @@ impl Mandelbrot {
             buf: Vec::new(),
             colour_palette: colour_palette,
             path_c: None,
+            seed,
         };
         x.compute();
         x
@@ -68,13 +96,18 @@ impl Mandelbrot {
 
                 let x0 = self.r.left() + (i as f32 + 0.5) * self.r.w / self.w as f32;
                 let y0 = -self.r.bot() + (j as f32 + 0.5) * self.r.h / self.h as f32;
+                let y0 = -y0;
 
+                // let nx = 3.0 * i as f32 / self.w as f32;
+                // let ny = 3.0 * j as f32 / self.h as f32;
+                let ns = 10.0;
+                let jpx = 0.5 * noise2d(ns*x0, ns*y0, self.seed);
+                let jpy = 0.5 * noise2d(ns*x0, ns*y0, khash(self.seed));
 
-                let c = Complex::new(x0, y0);
-                let mut z = Complex::new(0.0, 0.0);
-                // let mut z = 2.0c;
-                while z.re * z.re + z.im * z.im < 4.0 && it < MAX_ITERATIONS {
-                    z = z*z + c;
+                let c = Vec2::new(jpx, jpy);
+                let mut z = Vec2::new(0.0, 0.0);
+                while z.x * z.x + z.y * z.y < 4.0 && it < MAX_ITERATIONS {
+                    z = frac_fun(z, c, it);
                     it += 1;
                 }
 
@@ -86,10 +119,10 @@ impl Mandelbrot {
     }
 }
 
-impl DoFrame for Mandelbrot {
+impl DoFrame for FracTest {
     fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {    
         if inputs.key_falling(VirtualKeyCode::R) {
-            *self = Mandelbrot::new(self.w, self.h);
+            *self = FracTest::new(self.w, self.h, self.seed + 1);
         }
         if inputs.lmb == KeyStatus::JustPressed && inputs.key_held(VirtualKeyCode::LShift){
             let rp = inputs.mouse_pos.transform(inputs.screen_rect, self.r);
@@ -102,8 +135,7 @@ impl DoFrame for Mandelbrot {
 
             self.stale = true;
         } else if (inputs.lmb == KeyStatus::Pressed && !inputs.key_held(VirtualKeyCode::LShift) && !inputs.key_held(VirtualKeyCode::LControl)) || inputs.lmb == KeyStatus::JustPressed {
-            let v = inputs.mouse_pos.transform(inputs.screen_rect, self.r);
-            self.path_c = Some(Complex::new(v.x, v.y));
+            self.path_c = Some(inputs.mouse_pos.transform(inputs.screen_rect, self.r));
         }
 
         if self.stale {
@@ -126,13 +158,13 @@ impl DoFrame for Mandelbrot {
         }
 
         if let Some(path_c) = self.path_c {
-            let mut zold = Complex::new(0.0, 0.0);
+            let mut zold = Vec2::new(0.0, 0.0);
             for i in 0..100 {
-                let znew = zold*zold + path_c;
+                let znew = frac_fun(zold, path_c, i as i32);
     
                 // line start and end - transform to where canvas is. from self.r to screen rect
-                let start = Vec2::new(zold.re, zold.im).transform(self.r, inputs.screen_rect);
-                let end = Vec2::new(znew.re, znew.im).transform(self.r, inputs.screen_rect);
+                let start = zold.transform(self.r, inputs.screen_rect);
+                let end = znew.transform(self.r, inputs.screen_rect);
     
     
                 outputs.canvas.put_line(start, end, 0.002, 2.0, Vec4::new(1.0, 0.0, 0.0, 1.0));

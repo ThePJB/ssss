@@ -1,3 +1,7 @@
+use std::mem;
+
+pub static PI: f32 = std::f32::consts::PI;
+
 /***************************************************
  * Easing
  ***************************************************/
@@ -5,10 +9,10 @@ pub fn lerp(x1: f32, x2: f32, t: f32) -> f32 {
     x1 * (1.0 - t) + x2 * t
 }
 
-pub fn smoothstep(x1: f32, x2: f32, t: f32) -> f32 {
-    let t = t*t*(3.0-2.0*t);
-    lerp(x1, x2, t)
-}
+// pub fn smoothstep(x1: f32, x2: f32, t: f32) -> f32 {
+//     let t = t*t*(3.0-2.0*t);
+//     lerp(x1, x2, t)
+// }
 
 pub fn unlerp(x: f32, t1: f32, t2: f32) -> f32 {
     (x - t1) / (t2 - t1)
@@ -22,15 +26,33 @@ pub fn cubic_bezier(start: Vec2, c1: Vec2, c2: Vec2, end: Vec2, t: f32) -> Vec2 
     start.lerp(c1.lerp(c2.lerp(end, t), t), t)
 }
 
+// t 0..1
+pub fn smoothstep(t: f32) -> f32 {
+    t * t * (3. - 2. * t)
+}
+
 /***************************************************
  * RNG
  ***************************************************/
 
+ pub fn floorfrac(x: f32) -> (f32, f32) {
+    let floor = x.floor();
+    if x < 0.0 {
+        (floor, (floor - x).abs())
+    } else {
+        (floor, x - floor)
+    }
+}
+
 pub fn khash(mut state: u32) -> u32 {
-    state = (state ^ 2747636419) * 2654435769;
-    state = (state ^ (state >> 16)) * 2654435769;
-    state = (state ^ (state >> 16)) * 2654435769;
+    state = (state ^ 2747636419).wrapping_mul(2654435769);
+    state = (state ^ (state >> 16)).wrapping_mul(2654435769);
+    state = (state ^ (state >> 16)).wrapping_mul(2654435769);
     state
+}
+
+pub fn khash2i(x: i32, y: i32, seed: u32) -> u32 {
+    khash((x as u32).wrapping_mul(123176957).wrapping_add((y as u32).wrapping_mul(489172373)).wrapping_add(seed))
 }
 
 pub fn krand(seed: u32) -> f32 {
@@ -45,6 +67,37 @@ pub fn chance(seed: u32, percent: f32) -> bool {
     krand(seed) < percent
 }
 
+pub fn noise1d(t: f32, seed: u32) -> f32 {
+    let hstart = kuniform(seed + 489172373 * t.floor() as u32, 0.0, 1.0);
+    let hend = kuniform(seed + 489172373 * (t.floor() + 1.0) as u32, 0.0, 1.0);
+    lerp(hstart, hend, smoothstep(t.fract()))
+}
+
+pub fn noise2d(x: f32, y: f32, seed: u32) -> f32 {
+    let (xfloor, xfrac) = floorfrac(x);
+    let (yfloor, yfrac) = floorfrac(y);
+
+    let x0 = xfloor as i32;
+    let x1 = x0 + 1;
+    let y0 = yfloor as i32;
+    let y1 = y0 + 1;
+
+    let s00 = khash2i(x0, y0, seed);
+    let s10 = khash2i(x1, y0, seed);
+    let s01 = khash2i(x0, y1, seed);
+    let s11 = khash2i(x1, y1, seed);
+
+    let h00 = krand(s00);
+    let h10 = krand(s10);
+    let h01 = krand(s01);
+    let h11 = krand(s11);
+
+    let ptop = lerp(h00, h10, smoothstep(xfrac));
+    let pbot = lerp(h01, h11, smoothstep(xfrac));
+
+    lerp(ptop, pbot, smoothstep(yfrac))
+}
+
 /***************************************************
  * Vec
  ***************************************************/
@@ -57,6 +110,7 @@ pub struct Vec2 {
 
 impl Vec2 {
     pub const fn new(x: f32, y: f32) -> Vec2 { Vec2{x, y} }
+    pub fn new_r_theta(r: f32, theta: f32) -> Vec2 { Vec2{x: r * theta.cos(), y: r * theta.sin()} }
     pub fn mul_scalar(&self, scalar: f32) -> Vec2 { Vec2::new(self.x * scalar, self.y * scalar) }
     pub fn div_scalar(&self, scalar: f32) -> Vec2 { Vec2::new(self.x / scalar, self.y / scalar) }
     pub fn magnitude(&self) -> f32 { (self.x*self.x + self.y*self.y).sqrt() }
@@ -81,6 +135,13 @@ impl Vec2 {
             ((self.x - from.x) / from.w) * to.w + to.x,
             ((self.y - from.y) / from.h) * to.h + to.y,
         )
+    }
+    pub fn complex_mul(&self, other: Vec2) -> Vec2 {
+        let a = self.x;
+        let b = self.y;
+        let c = other.x;
+        let d = other.y;
+        Vec2::new(a*c - b*d, a*d + c*b)
     }
     
 }

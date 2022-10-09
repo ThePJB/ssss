@@ -33,6 +33,8 @@ impl FloatSlider {
             self.curr = lerp(self.min, self.max, slider_t);
         }
 
+        // todo scroll mouse for fine adjustment
+
         // rendering
         let bg = Vec4::new(1.0, 0.0, 0.2, 1.0).hsv_to_rgb();
         let fg = Vec4::new(1.0, 0.0, 0.6, 1.0).hsv_to_rgb();

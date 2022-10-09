@@ -14,8 +14,9 @@ pub enum Tile {
     Empty,
 }
 
-pub struct PredatorPrey {
+pub struct PredatorPreyFert {
     grid: Vec<Tile>,
+    ferts: Vec<f32>,
     w: usize,
     h: usize,
 
@@ -40,8 +41,8 @@ pub struct PredatorPrey {
     num_food: i32,
 }
 
-impl PredatorPrey {
-    pub fn new(w: usize, h: usize) -> PredatorPrey {
+impl PredatorPreyFert {
+    pub fn new(w: usize, h: usize) -> PredatorPreyFert {
         let seed = 69;
         let initial_pred = 0.001;
         let initial_prey = 0.001;
@@ -67,21 +68,31 @@ impl PredatorPrey {
                 }
             }
         }
+        
+        let mut ferts = vec![0.0; w*h];
+        for i in 0..w {
+            for j in 0..h {
+                let nx = (i as f32 / w as f32) * 4.0;
+                let ny = (j as f32 / h as f32) * 4.0;
+                ferts[j*w + i] = noise2d(nx, ny, 13717717);
+            }
+        }
 
-        PredatorPrey {
+        PredatorPreyFert {
             grid,
+            ferts,
             w,
             h,
             seed,
             initial_pred,
             initial_prey,
             initial_food,
-            p_food: 0.005,
-            e_food: 0.8,
-            prey_e_reproduce: 0.3,
-            e_prey: 1.6,
-            pred_e_reproduce: 1.5,
-            pred_e_decay: 0.2,
+            p_food: 0.01,
+            e_food: 0.2,
+            prey_e_reproduce: 0.6,
+            e_prey: 0.4,
+            pred_e_reproduce: 5.0,
+            pred_e_decay: 0.1,
             prey_e_decay: 0.1,
             num_food,
             num_pred,
@@ -103,7 +114,7 @@ impl PredatorPrey {
 
 // hmm not dying but reproducing, interesting
 
-impl DoFrame for PredatorPrey {
+impl DoFrame for PredatorPreyFert {
     fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {
 
         // println!("pred: {} prey: {} food: {}", self.num_pred, self.num_prey, self.num_food);
@@ -254,7 +265,7 @@ impl DoFrame for PredatorPrey {
             let idx = *idx;
             match self.grid[idx] {
                 Tile::Empty => {
-                    if chance(inputs.seed * 129837715 + idx as u32 * 91238754, inputs.dt as f32 * self.p_food) {
+                    if chance(inputs.seed * 129837715 + idx as u32 * 91238754, inputs.dt as f32 * self.p_food * self.ferts[idx]) {
                         self.grid[idx] = Tile::Food;
                         self.num_food += 1;
                     } else {
@@ -272,7 +283,11 @@ impl DoFrame for PredatorPrey {
             for j in 0..th {
                 t.set(i as i32, j as i32, match self.grid[j * self.w + i] {
                     Tile::Empty => Vec4::new(0.0, 0.0, 0.0, 1.0),
-                    Tile::Food => Vec4::new(0.0, 1.0, 0.0, 1.0),
+                    Tile::Food => {
+                        let cf0 = Vec4::new(0.2, 0.3, 0.0, 1.0);
+                        let cf1 = Vec4::new(0.0, 1.0, 0.0, 1.0);
+                        cf0.lerp(cf1, self.ferts[j*self.w + i])
+                    },
                     Tile::Prey(_) => Vec4::new(1.0, 1.0, 1.0, 1.0),
                     Tile::Predator(_) => Vec4::new(1.0, 0.0, 0.0, 1.0),
                 });

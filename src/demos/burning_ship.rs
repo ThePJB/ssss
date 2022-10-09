@@ -4,15 +4,13 @@ use crate::texture_buffer::*;
 use crate::kinput::*;
 use glutin::event::VirtualKeyCode;
 
-use num::complex::Complex;
-
 // c such that |(((c^2 + c)^2 + c)^2 + c)^2 + ...| <= 2.0
 // so 1 - 1 + 1 - 1 + 1 - 1 for example
 // intuition for squaring a complex number?
 // recursive definition of the points? eg a point is in the mandelbrot set if the point it goes to is in the mandelbrot set
 //  but actually thats wrong because points can be out of the mandelbrot set. maybe if p^2 - c is in the mandelbrot set
 
-pub struct Mandelbrot {
+pub struct BurningShip {
     w: usize,
     h: usize,
     r: Rect,
@@ -21,13 +19,13 @@ pub struct Mandelbrot {
 
     stale: bool,
 
-    path_c: Option<Complex<f32>>,
+    path_c: Option<Vec2>,
 }
 
 const MAX_ITERATIONS: i32 = 160;
 
-impl Mandelbrot {
-    pub fn new(w: usize, h: usize) -> Mandelbrot {
+impl BurningShip {
+    pub fn new(w: usize, h: usize) -> BurningShip {
         let mut colour_palette = Vec::new();
 
         colour_palette.push(Vec4::new(0.0, 0.0, 0.0, 1.0));
@@ -43,7 +41,7 @@ impl Mandelbrot {
             colour_palette.push(start.lerp(end, i as f32/(MAX_ITERATIONS/2) as f32));
         };
 
-        let mut x = Mandelbrot {
+        let mut x = BurningShip {
             w,
             h,
             r: Rect::new(-2.0, -1.5, 3.0, 3.0),
@@ -68,13 +66,14 @@ impl Mandelbrot {
 
                 let x0 = self.r.left() + (i as f32 + 0.5) * self.r.w / self.w as f32;
                 let y0 = -self.r.bot() + (j as f32 + 0.5) * self.r.h / self.h as f32;
+                let y0 = -y0;
 
 
-                let c = Complex::new(x0, y0);
-                let mut z = Complex::new(0.0, 0.0);
-                // let mut z = 2.0c;
-                while z.re * z.re + z.im * z.im < 4.0 && it < MAX_ITERATIONS {
-                    z = z*z + c;
+                let c = Vec2::new(x0, y0);
+                let mut z = Vec2::new(0.0, 0.0);
+                while z.x * z.x + z.y * z.y < 4.0 && it < MAX_ITERATIONS {
+                    z = Vec2::new(z.x.abs(), z.y.abs());
+                    z = z.complex_mul(z) + c;
                     it += 1;
                 }
 
@@ -86,10 +85,10 @@ impl Mandelbrot {
     }
 }
 
-impl DoFrame for Mandelbrot {
+impl DoFrame for BurningShip {
     fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {    
         if inputs.key_falling(VirtualKeyCode::R) {
-            *self = Mandelbrot::new(self.w, self.h);
+            *self = BurningShip::new(self.w, self.h);
         }
         if inputs.lmb == KeyStatus::JustPressed && inputs.key_held(VirtualKeyCode::LShift){
             let rp = inputs.mouse_pos.transform(inputs.screen_rect, self.r);
@@ -102,8 +101,7 @@ impl DoFrame for Mandelbrot {
 
             self.stale = true;
         } else if (inputs.lmb == KeyStatus::Pressed && !inputs.key_held(VirtualKeyCode::LShift) && !inputs.key_held(VirtualKeyCode::LControl)) || inputs.lmb == KeyStatus::JustPressed {
-            let v = inputs.mouse_pos.transform(inputs.screen_rect, self.r);
-            self.path_c = Some(Complex::new(v.x, v.y));
+            self.path_c = Some(inputs.mouse_pos.transform(inputs.screen_rect, self.r));
         }
 
         if self.stale {
@@ -126,13 +124,14 @@ impl DoFrame for Mandelbrot {
         }
 
         if let Some(path_c) = self.path_c {
-            let mut zold = Complex::new(0.0, 0.0);
+            let mut zold = Vec2::new(0.0, 0.0);
             for i in 0..100 {
-                let znew = zold*zold + path_c;
+                let znew = Vec2::new(zold.x.abs(), zold.y.abs());
+                let znew = znew.complex_mul(znew) + path_c;
     
                 // line start and end - transform to where canvas is. from self.r to screen rect
-                let start = Vec2::new(zold.re, zold.im).transform(self.r, inputs.screen_rect);
-                let end = Vec2::new(znew.re, znew.im).transform(self.r, inputs.screen_rect);
+                let start = zold.transform(self.r, inputs.screen_rect);
+                let end = znew.transform(self.r, inputs.screen_rect);
     
     
                 outputs.canvas.put_line(start, end, 0.002, 2.0, Vec4::new(1.0, 0.0, 0.0, 1.0));
