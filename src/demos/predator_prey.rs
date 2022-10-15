@@ -268,8 +268,8 @@ impl DoFrame for PredatorPrey {
                 });
             }
         }
-        outputs.texture = Some(t);
-        outputs.texture_rect = Some(inputs.screen_rect);
+        outputs.set_texture.push((t, 0));
+        outputs.draw_texture.push((inputs.screen_rect, 0));
 
         // println!("nmo: {:?}", nmo);
         if inputs.frame % 60 == 0 {

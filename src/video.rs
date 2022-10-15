@@ -63,15 +63,15 @@ impl Video {
 
     pub fn render(&mut self, outputs: &FrameOutputs, a: f32) {
         unsafe {
-            if let Some(updated_texture) = &outputs.texture {
-                self.texture_renderer.update(&self.gl, updated_texture);
+            for (buf, idx) in &outputs.set_texture {
+                self.texture_renderer.update(&self.gl, buf, *idx);
             }
 
             self.gl.clear_color(0.0, 0.0, 0.0, 1.0);
             self.gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT); 
 
-            if let Some(texture_rect) = outputs.texture_rect {
-                self.texture_renderer.render(&self.gl, texture_rect, a);
+            for (r, idx) in &outputs.draw_texture {
+                self.texture_renderer.render(&self.gl, *r, a, *idx);
             }
 
             self.gl.clear(glow::DEPTH_BUFFER_BIT); 

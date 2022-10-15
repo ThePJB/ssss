@@ -1,3 +1,5 @@
+use crate::demos::bsj::BSJ;
+use crate::demos::mdj::MDJ;
 use crate::demos::burning_ship::BurningShip;
 use crate::demos::frac_test::FracTest;
 use crate::demos::pp_fert::PredatorPreyFert;
@@ -10,6 +12,7 @@ use crate::demos::rgbwalk::*;
 use crate::demos::rgbutm::*;
 use crate::demos::lvlwalk::*;
 use crate::demos::noise_test::*;
+use crate::demos::voronoinoi::*;
 use crate::kmath::*;
 use glutin::event::VirtualKeyCode;
 // scene struct or 
@@ -49,6 +52,9 @@ impl RootScene {
                 "lvlwalk".to_owned(),
                 "frac test".to_owned(),
                 "noise test".to_owned(),
+                "voronoinoi".to_owned(),
+                "bsj".to_owned(),
+                "mdj".to_owned(),
             ],
             idx: 0,
             show: false,
@@ -59,15 +65,18 @@ impl RootScene {
         self.curr_scene = Some(match self.idx {
             0 => Box::new(Percoviz::new(400, 400)),
             1 => Box::new(PredatorPrey::new(400,400)),
-            2 => Box::new(Mandelbrot::new(400, 400)),
+            2 => Box::new(Mandelbrot::new(800, 800)),
             3 => Box::new(Julia::new(400, 400)),
             4 => Box::new(BurningShip::new(800, 800)),
             5 => Box::new(PredatorPreyFert::new(400, 400)),
-            6 => Box::new(RGBWalk::new(400, 400)),
+            6 => Box::new(RGBWalk::new(151, 151, 0)),
             7 => Box::new(RGBUTM::new(200, 200, 0)),
             8 => Box::new(LevelWalk::new(800, 800)),
             9 => Box::new(FracTest::new(800, 800, 0)),
             10 => Box::new(NoiseTest::new(800, 800)),
+            11 => Box::new(Voronoinoi::new()),
+            12 => Box::new(BSJ::new(800, 800)),
+            13 => Box::new(MDJ::new(800, 800)),
             _ => panic!("out of range")
         })
     }

@@ -47,3 +47,44 @@ julia is p such that |(((p2 + p)^2 + p)^2 + ...| <= 2.0
 just snuck in a constant at the start
 what if we defined a fractal as a dual process of 2 points fighting, ie subtracting
 (p1^2 - p2^2)^2 + p1)^2 - p2^2 ...
+
+get em multithreaded, simd for responsive / higher res
+its an extremely parallel task
+even cuda fractals hey, or in fragment shader
+but anyway threads could return just some arrays that get joined. maybe moves and stuff optimize it
+f32x8 best? but its got dependence. so just the bailout will be as slow as the last one
+
+maybe plotting orbits over the julia set they will make more sense
+
+honestly a better colouring algorithm for deeper steps would be good
+can you just do some log shit to turn up the steps heaps? cause it gets lame
+
+is there some kind of fast stop computing for mandelbrot
+
+LOL f64s are so good
+
+## rgbutm
+ways of exploring automatically, e.g. distribution of age over time. measurement of contained energy
+shortest and most beautiful lives?
+average age vs chaos, or most uniform age
+number of cycles past x and y
+or every 1000 erase an area and reset yourself
+what if the states were periodic
+
+// lines, i think i must be calculating the width wrong
+
+
+why do the bulbs in the mandelbrot set have periods as they do?
+mandelbrot and julia next to each other for C selection
+pandelbrot, wouldnt need as much recalculating, just do 1 row of pixels at a time
+
+
+for voronoi I might need to basically animate the algorithm lol. bad triangles, poly, etc.
+
+hmm software renderer would be juicy for a pixel game
+
+do some voronoise
+
+do some 3d noise animations
+some animated noise would look sick honestly
+can I have a better scene registry sorta thing or do I need C for that? cant seem to do much cool functional/closure shit in rust. like in Go its no worries.

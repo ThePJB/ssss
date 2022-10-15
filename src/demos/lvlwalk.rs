@@ -128,8 +128,8 @@ impl DoFrame for LevelWalk {
                 t.set(i as i32, j as i32, self.grid[j * self.w + i]);
             }
         }
-        outputs.texture = Some(t);
-        outputs.texture_rect = Some(inputs.screen_rect);
+        outputs.set_texture.push((t, 0));
+        outputs.draw_texture.push((inputs.screen_rect, 0));
     }
 }
 

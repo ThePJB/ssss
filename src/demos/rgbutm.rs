@@ -128,8 +128,8 @@ impl DoFrame for RGBUTM {
                 t.set(i as i32, j as i32, Vec4::new(c[0] as f32 / 255.0, c[1] as f32 / 255.0, c[2] as f32 / 255.0, 1.0));
             }
         }
-        outputs.texture = Some(t);
-        outputs.texture_rect = Some(inputs.screen_rect);
+        outputs.set_texture.push((t, 0));
+        outputs.draw_texture.push((inputs.screen_rect, 0));
 
     }
 }

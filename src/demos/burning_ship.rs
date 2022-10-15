@@ -112,7 +112,7 @@ impl DoFrame for BurningShip {
                     t.set(i as i32, j as i32, colour);
                 }
             }
-            outputs.texture = Some(t);
+            outputs.set_texture.push((t, 0));
 
             self.stale = false;
         }
@@ -141,6 +141,6 @@ impl DoFrame for BurningShip {
         let yend = Vec2::new(0.0, 1.0).transform(self.r, inputs.screen_rect);
         outputs.canvas.put_line(ystart, yend, 0.001, 2.0, Vec4::new(0.8, 0.8, 0.8, 1.0));
  
-        outputs.texture_rect = Some(inputs.screen_rect);
+        outputs.draw_texture.push((inputs.screen_rect, 0));
     }
 }

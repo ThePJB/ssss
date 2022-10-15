@@ -24,24 +24,41 @@ pub struct Mandelbrot {
     path_c: Option<Complex<f32>>,
 }
 
-const MAX_ITERATIONS: i32 = 160;
+const MAX_ITERATIONS: i32 = 1600;
+
+// have a rule like colour changes every doubling
 
 impl Mandelbrot {
     pub fn new(w: usize, h: usize) -> Mandelbrot {
         let mut colour_palette = Vec::new();
-
+        let mut period = 16;
+        let mut pc = 0;
+        let mut i = 0;
         colour_palette.push(Vec4::new(0.0, 0.0, 0.0, 1.0));
-        let start = Vec4::new(1.0, 0.4, 0.0, 1.0);
-        let end = Vec4::new(0.9, 0.7, 0.0, 1.0);
-        for i in 0..MAX_ITERATIONS/2 {
-            colour_palette.push(start.lerp(end, i as f32/(MAX_ITERATIONS/2) as f32));
-        };
+        while colour_palette.len() < MAX_ITERATIONS as usize {
+            let colour_start = Vec4::new(137.5 * i as f32, 1.0, 1.0, 1.0).hsv_to_rgb();
+            let colour_end = Vec4::new(137.5 * (i+1) as f32, 1.0, 1.0, 1.0).hsv_to_rgb();
+            colour_palette.push(colour_start.lerp(colour_end, pc as f32 / period as f32));
+            pc += 1;
+            if pc == period {
+                period *= 2;
+                pc = 0;
+                i += 1;
+            }
+        }
 
-        let start = Vec4::new(0.9, 0.7, 0.0, 1.0);
-        let end = Vec4::new(0.2, 0.7, 0.5, 1.0);
-        for i in 0..MAX_ITERATIONS/2 {
-            colour_palette.push(start.lerp(end, i as f32/(MAX_ITERATIONS/2) as f32));
-        };
+        // colour_palette.push(Vec4::new(0.0, 0.0, 0.0, 1.0));
+        // let start = Vec4::new(1.0, 0.4, 0.0, 1.0);
+        // let end = Vec4::new(0.9, 0.7, 0.0, 1.0);
+        // for i in 0..MAX_ITERATIONS/2 {
+        //     colour_palette.push(start.lerp(end, i as f32/(MAX_ITERATIONS/2) as f32));
+        // };
+
+        // let start = Vec4::new(0.9, 0.7, 0.0, 1.0);
+        // let end = Vec4::new(0.2, 0.7, 0.5, 1.0);
+        // for i in 0..MAX_ITERATIONS/2 {
+        //     colour_palette.push(start.lerp(end, i as f32/(MAX_ITERATIONS/2) as f32));
+        // };
 
         let mut x = Mandelbrot {
             w,
@@ -66,8 +83,8 @@ impl Mandelbrot {
                 // convert to float (im) for each pixel coordinate
                 let mut it = 0;
 
-                let x0 = self.r.left() + (i as f32 + 0.5) * self.r.w / self.w as f32;
-                let y0 = -self.r.bot() + (j as f32 + 0.5) * self.r.h / self.h as f32;
+                let x0 = self.r.left() as f64 + (i as f64 + 0.5) * self.r.w as f64 / self.w as f64;
+                let y0 = -self.r.bot() as f64 + (j as f64 + 0.5) * self.r.h as f64 / self.h as f64;
 
 
                 let c = Complex::new(x0, y0);
@@ -120,7 +137,7 @@ impl DoFrame for Mandelbrot {
                     t.set(i as i32, j as i32, colour);
                 }
             }
-            outputs.texture = Some(t);
+            outputs.set_texture.push((t, 0));
 
             self.stale = false;
         }
@@ -148,6 +165,6 @@ impl DoFrame for Mandelbrot {
         let yend = Vec2::new(0.0, 1.0).transform(self.r, inputs.screen_rect);
         outputs.canvas.put_line(ystart, yend, 0.001, 2.0, Vec4::new(0.8, 0.8, 0.8, 1.0));
  
-        outputs.texture_rect = Some(inputs.screen_rect);
+        outputs.draw_texture.push((inputs.screen_rect, 0));
     }
 }

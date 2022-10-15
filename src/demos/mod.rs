@@ -10,3 +10,6 @@ pub mod lvlwalk;
 pub mod frac_test;
 pub mod noise_test;
 pub mod voronoinoi;
+pub mod bsj;
+pub mod mdj;
+pub mod rgbrec;

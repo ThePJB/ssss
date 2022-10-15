@@ -80,11 +80,11 @@ impl DoFrame for NoiseTest {
                     t.set(i as i32, j as i32, colour);
                 }
             }
-            outputs.texture = Some(t);
+            outputs.set_texture.push((t, 0));
 
         }
  
-        outputs.texture_rect = Some(inputs.screen_rect);
+        outputs.draw_texture.push((inputs.screen_rect, 0));
     }
 }
 
@@ -106,9 +106,9 @@ fn rec_noise(max: i32, seed: u32, x: f32, y: f32) -> f32 {
     let dy = r * theta.cos();
 
     let mut acc = 0.0;
-    // acc += noise2d(x, y, seed);  // was lookin like good terrain
+    acc += noise2d(x, y, seed);  // was lookin like good terrain
     // acc += x.sin() + y.cos();   // shiet welcome to the spooky zone
-    acc += x.sin();
+    // acc += x.sin();
     if max > 0 {
         // acc += rec_noise(max - 1, seed, x + dx, y + dy);
         acc = rec_noise(max - 1, seed, x + dx, y + dy);

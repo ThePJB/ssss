@@ -2,11 +2,12 @@ use crate::kmath::*;
 use crate::texture_buffer::*;
 use glow::*;
 
+const NUM_TEXTURES: usize = 2;
 pub struct TextureRenderer {
     vbo: NativeBuffer,
     vao: NativeVertexArray,
     program: NativeProgram,
-    texture: NativeTexture,
+    textures: [NativeTexture; NUM_TEXTURES],
 }
 
 impl TextureRenderer {
@@ -83,25 +84,27 @@ impl TextureRenderer {
             gl.detach_shader(program, vs);
             gl.delete_shader(vs);
 
-            let texture = gl.create_texture().unwrap();
-            gl.bind_texture(glow::TEXTURE_2D, Some(texture));
-            gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MIN_FILTER, glow::NEAREST as i32);
-            gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MAG_FILTER, glow::NEAREST as i32);
-            gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, glow::CLAMP_TO_EDGE as i32);
-            gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_T, glow::CLAMP_TO_EDGE as i32);
+            let textures = [gl.create_texture().unwrap(), gl.create_texture().unwrap()];
+            for i in 0..NUM_TEXTURES {
+                gl.bind_texture(glow::TEXTURE_2D, Some(textures[i]));
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MIN_FILTER, glow::NEAREST as i32);
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MAG_FILTER, glow::NEAREST as i32);
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, glow::CLAMP_TO_EDGE as i32);
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_T, glow::CLAMP_TO_EDGE as i32);
+            }
             
             TextureRenderer {
                 vbo,
                 vao,
                 program,
-                texture,
+                textures,
             }
         }
         }
 
-    pub fn update(&self, gl: &glow::Context, buf: &TextureBuffer) {
+    pub fn update(&self, gl: &glow::Context, buf: &TextureBuffer, texture: usize) {
         unsafe {
-            gl.bind_texture(glow::TEXTURE_2D, Some(self.texture));
+            gl.bind_texture(glow::TEXTURE_2D, Some(self.textures[texture]));
             gl.tex_image_2d(glow::TEXTURE_2D, 0, glow::RGBA as i32, 
                 buf.w as i32, 
                 buf.h as i32, 0, RGBA, glow::UNSIGNED_BYTE, 
@@ -109,9 +112,9 @@ impl TextureRenderer {
             }
         }
         
-        pub fn render(&self, gl: &glow::Context, rect: Rect, a: f32) {
+        pub fn render(&self, gl: &glow::Context, rect: Rect, a: f32, texture: usize) {
             unsafe {
-            gl.bind_texture(glow::TEXTURE_2D, Some(self.texture));
+            gl.bind_texture(glow::TEXTURE_2D, Some(self.textures[texture]));
             gl.use_program(Some(self.program));
             gl.bind_vertex_array(Some(self.vao));
             gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.vbo));

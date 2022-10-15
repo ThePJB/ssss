@@ -157,7 +157,7 @@ impl SimpleCanvas {
 
     pub fn put_line(&mut self, a: Vec2, b: Vec2, w: f32, depth: f32, colour: Vec4) {
         let v = (b - a).normalize();
-        let wv = w/2.0 * Vec2::new(-v.y, -v.x);
+        let wv = w/2.0 * Vec2::new(-v.y, v.x);
         self.put_quad(a + wv, b + wv, a - wv, b - wv, depth, colour);
     }
 }

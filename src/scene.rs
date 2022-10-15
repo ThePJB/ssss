@@ -6,8 +6,8 @@ use crate::kmath::*;
 
 pub struct FrameOutputs {
     pub canvas: SimpleCanvas,
-    pub texture: Option<TextureBuffer>,
-    pub texture_rect: Option<Rect>,
+    pub set_texture: Vec<(TextureBuffer, usize)>,
+    pub draw_texture: Vec<(Rect, usize)>,
     pub glyphs: GlyphBuffer,
 }
 
@@ -16,8 +16,8 @@ impl FrameOutputs {
         FrameOutputs {
             glyphs: GlyphBuffer::new(),
             canvas: SimpleCanvas::new(a),
-            texture: None,
-            texture_rect: None,
+            set_texture: Vec::new(),
+            draw_texture: Vec::new(),
         }
     }
 }

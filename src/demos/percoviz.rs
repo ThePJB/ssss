@@ -140,12 +140,12 @@ impl DoFrame for Percoviz {
                     t.set(i as i32, j as i32, colour);
                 }
             }
-            outputs.texture = Some(t);
+            outputs.set_texture.push((t, 0));
 
             self.stale = false;
         }
  
-        outputs.texture_rect = Some(inputs.screen_rect);
+        outputs.draw_texture.push((inputs.screen_rect, 0));
     }
 }
 

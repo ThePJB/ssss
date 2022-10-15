@@ -18,6 +18,7 @@ mod root_scene;
 use crate::application::*;
 
 fn main() {
+    std::env::set_var("RUST_BACKTRACE", "1");
     let event_loop = glutin::event_loop::EventLoop::new();
     let mut application = Application::new(&event_loop);
     
