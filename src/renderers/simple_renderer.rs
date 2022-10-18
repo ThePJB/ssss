@@ -101,25 +101,25 @@ impl SimpleRenderer {
 }
 
 pub struct SimpleCanvas {
-    a: f32,
+    a: f64,
     buf: Vec<u8>,
 }
 
 impl SimpleCanvas {
-    pub fn new(a: f32) -> SimpleCanvas {
+    pub fn new(a: f64) -> SimpleCanvas {
         SimpleCanvas {
             a,
             buf: Vec::new(),
         }
     }
 
-    fn put_float(&mut self, x: f32) {
-        for b in x.to_le_bytes() {
+    fn put_float(&mut self, x: f64) {
+        for b in (x as f32).to_le_bytes() {
             self.buf.push(b);
         }
     }
 
-    pub fn put_triangle(&mut self, p1: Vec2, p2: Vec2, p3: Vec2, depth: f32, colour: Vec4) {
+    pub fn put_triangle(&mut self, p1: Vec2, p2: Vec2, p3: Vec2, depth: f64, colour: Vec4) {
         self.put_float(p1.x/self.a);
         self.put_float(p1.y);
         self.put_float(depth);
@@ -145,17 +145,17 @@ impl SimpleCanvas {
         self.put_float(colour.w);
     }
 
-    pub fn put_rect(&mut self, r: Rect, depth: f32, colour: Vec4) {
+    pub fn put_rect(&mut self, r: Rect, depth: f64, colour: Vec4) {
         self.put_triangle(r.tl(), r.tr(), r.bl(), depth, colour);
         self.put_triangle(r.bl(), r.tr(), r.br(), depth, colour);
     }
     
-    pub fn put_quad(&mut self, a: Vec2, b: Vec2, c: Vec2, d: Vec2, depth: f32, colour: Vec4) {
+    pub fn put_quad(&mut self, a: Vec2, b: Vec2, c: Vec2, d: Vec2, depth: f64, colour: Vec4) {
         self.put_triangle(a,b,c, depth, colour);
         self.put_triangle(b,d,c, depth, colour);
     }
 
-    pub fn put_line(&mut self, a: Vec2, b: Vec2, w: f32, depth: f32, colour: Vec4) {
+    pub fn put_line(&mut self, a: Vec2, b: Vec2, w: f64, depth: f64, colour: Vec4) {
         let v = (b - a).normalize();
         let wv = w/2.0 * Vec2::new(-v.y, v.x);
         self.put_quad(a + wv, b + wv, a - wv, b - wv, depth, colour);

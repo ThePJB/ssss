@@ -88,3 +88,8 @@ do some voronoise
 do some 3d noise animations
 some animated noise would look sick honestly
 can I have a better scene registry sorta thing or do I need C for that? cant seem to do much cool functional/closure shit in rust. like in Go its no worries.
+
+value noise but the values arent uniform distributed, theyre exp distributed. or like some main chance to be low. that could even be given by another noise fn. so its like holey
+
+maybe its trait magic needed
+i dont actually want an array of trait objects but I do want a table of function pointers returning trait objects

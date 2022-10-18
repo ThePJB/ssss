@@ -54,15 +54,15 @@ impl FrameInputState {
 
 // Its basically just a state machine to go from events to polling behaviour
 pub struct EventAggregator {
-    xres: f32,
-    yres: f32,
+    xres: f64,
+    yres: f64,
     t_last: Instant,
     instant_mouse_pos: Vec2,
     current: FrameInputState,
 }
 
 impl EventAggregator {
-    pub fn new(xres: f32, yres: f32) -> EventAggregator {
+    pub fn new(xres: f64, yres: f64) -> EventAggregator {
         EventAggregator { 
             xres, 
             yres, 
@@ -129,13 +129,13 @@ impl EventAggregator {
                     position: pos,
                     ..
                 } => {
-                    self.instant_mouse_pos = Vec2::new(pos.x as f32 / self.yres, pos.y as f32 / self.yres);
+                    self.instant_mouse_pos = Vec2::new(pos.x as f64 / self.yres, pos.y as f64 / self.yres);
                 },
 
                 // Resize
                 Resized(physical_size) => {
-                    self.xres = physical_size.width as f32;
-                    self.yres = physical_size.height as f32;
+                    self.xres = physical_size.width as f64;
+                    self.yres = physical_size.height as f64;
                     self.current.screen_rect = Rect::new(0.0, 0.0, self.xres / self.yres, 1.0);
                 },
 

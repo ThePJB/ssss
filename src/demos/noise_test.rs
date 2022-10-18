@@ -12,8 +12,14 @@ pub struct NoiseTest {
 
     stale: bool,
 
-    grid: Vec<f32>,
-    max: f32,
+    grid: Vec<f64>,
+    max: f64,
+}
+
+impl Default for NoiseTest {
+    fn default() -> Self {
+        Self::new(800, 800)
+    }
 }
 
 impl NoiseTest {
@@ -35,8 +41,8 @@ impl NoiseTest {
         
         for i in 0..self.w {
             for j in 0..self.h {
-                let nx = 32.0 * i as f32 / self.w as f32;
-                let ny = 32.0 * j as f32 / self.h as f32;
+                let nx = 32.0 * i as f64 / self.w as f64;
+                let ny = 32.0 * j as f64 / self.h as f64;
                 //let h = noise2d(nx, ny, self.seed + 12341237);
                 let h = rec_noise(10, self.seed, nx, ny);
 
@@ -52,7 +58,7 @@ impl NoiseTest {
     }
 }
 
-impl DoFrame for NoiseTest {
+impl Demo for NoiseTest {
     fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {
     //     let mut change = self.edge_chance_slider.frame(inputs, outputs, inputs.screen_rect.grid_child(8, 0, 10, 3));
     //     change |= self.edge_chance_fine_slider.frame(inputs, outputs, inputs.screen_rect.grid_child(9, 0, 10, 3));
@@ -88,7 +94,7 @@ impl DoFrame for NoiseTest {
     }
 }
 
-fn rec_noise(max: i32, seed: u32, x: f32, y: f32) -> f32 {
+fn rec_noise(max: i32, seed: u32, x: f64, y: f64) -> f64 {
     // and 0 is pretty suss so what if instead of a random unit -1,1 x and y it was just r theta, or r theta varying
 
     let rns = 0.25;
@@ -99,7 +105,7 @@ fn rec_noise(max: i32, seed: u32, x: f32, y: f32) -> f32 {
 
     let ra = 4.0;
     
-    let r = 0.1 * max as f32 * ds * noise2d(ra * rns * x, ra * rns * y, seed  * 1312317);
+    let r = 0.1 * max as f64 * ds * noise2d(ra * rns * x, ra * rns * y, seed  * 1312317);
     // let r = ds * noise2d(ra * rns * x, ra * rns * y, seed  * 1312317);
     let theta =  2.0 * PI * noise2d(rns * x, rns * y, seed  * 3412477);
     let dx = r * theta.sin();

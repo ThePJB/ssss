@@ -1,4 +1,4 @@
-use crate::{scene::{DoFrame, FrameOutputs}, kinput::FrameInputState};
+use crate::{scene::{Demo, FrameOutputs}, kinput::FrameInputState};
 use crate::kmath::*;
 use crate::texture_buffer::*;
 use glutin::event::VirtualKeyCode;
@@ -68,6 +68,12 @@ pub struct RGBUTM {
     seed: u32,
 }
 
+impl Default for RGBUTM {
+    fn default() -> Self {
+        Self::new(200, 200, 129837123)
+    }
+}
+
 impl RGBUTM {
     pub fn new(w: usize, h: usize, seed: u32) -> RGBUTM {
         let head_colour = [0, 255, 255];
@@ -91,7 +97,7 @@ impl RGBUTM {
     }
 }
 
-impl DoFrame for RGBUTM {
+impl Demo for RGBUTM {
     fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {
 
         if inputs.key_rising(VirtualKeyCode::R) {
@@ -125,7 +131,7 @@ impl DoFrame for RGBUTM {
             for j in 0..th {
                 let c = self.grid[j * self.w + i];
                 
-                t.set(i as i32, j as i32, Vec4::new(c[0] as f32 / 255.0, c[1] as f32 / 255.0, c[2] as f32 / 255.0, 1.0));
+                t.set(i as i32, j as i32, Vec4::new(c[0] as f64 / 255.0, c[1] as f64 / 255.0, c[2] as f64 / 255.0, 1.0));
             }
         }
         outputs.set_texture.push((t, 0));

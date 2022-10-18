@@ -16,12 +16,12 @@ impl Application {
         let xres = 1600;
         let yres = 1600;
     
-        let video = Video::new("kdemos", xres as f32, yres as f32, event_loop);
+        let video = Video::new("kdemos", xres as f64, yres as f64, event_loop);
         
         Application {
             video,
             root_scene: RootScene::new(),
-            event_handler: EventAggregator::new(xres as f32, yres as f32)
+            event_handler: EventAggregator::new(xres as f64, yres as f64)
         }
     }
 
@@ -31,8 +31,8 @@ impl Application {
             Event::WindowEvent {event: WindowEvent::CloseRequested, ..} => self.exit(),
             Event::WindowEvent {event: WindowEvent::Resized(physical_size), .. } => {
                     self.video.window.resize(physical_size);
-                    self.video.xres = physical_size.width as f32;
-                    self.video.yres = physical_size.height as f32;
+                    self.video.xres = physical_size.width as f64;
+                    self.video.yres = physical_size.height as f64;
                     unsafe {self.video.gl.viewport(0, 0, physical_size.width as i32, physical_size.height as i32)};
                     self.event_handler.handle_event(&event);
                     // this is expected in the event handler but we need to also handle it here

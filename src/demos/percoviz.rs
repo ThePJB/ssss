@@ -12,14 +12,20 @@ pub struct Percoviz {
     seed: u32,
 
     components: Vec<i32>,
-    edges_above: Vec<f32>,
-    edges_left: Vec<f32>,
+    edges_above: Vec<f64>,
+    edges_left: Vec<f64>,
 
-    edge_chance: f32,
+    edge_chance: f64,
     edge_chance_slider: FloatSlider,
     edge_chance_fine_slider: FloatSlider,
 
     stale: bool,
+}
+
+impl Default for Percoviz {
+    fn default() -> Percoviz {
+        Percoviz::new(400, 400)
+    }
 }
 
 impl Percoviz {
@@ -114,7 +120,7 @@ impl Percoviz {
     }
 }
 
-impl DoFrame for Percoviz {
+impl Demo for Percoviz {
     fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {
         let mut change = self.edge_chance_slider.frame(inputs, outputs, inputs.screen_rect.grid_child(8, 0, 10, 3));
         change |= self.edge_chance_fine_slider.frame(inputs, outputs, inputs.screen_rect.grid_child(9, 0, 10, 3));
@@ -136,7 +142,7 @@ impl DoFrame for Percoviz {
             for i in 0..tw {
                 for j in 0..th {
                     let cc = self.components[i * self.h + j];
-                    let colour = Vec4::new(cc as f32 * 137.5, 1.0, 1.0, 1.0).hsv_to_rgb();
+                    let colour = Vec4::new(cc as f64 * 137.5, 1.0, 1.0, 1.0).hsv_to_rgb();
                     t.set(i as i32, j as i32, colour);
                 }
             }

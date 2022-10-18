@@ -1,4 +1,4 @@
-use std::f32::consts::PI;
+use std::f64::consts::PI;
 
 use crate::scene::*;
 use crate::kmath::*;
@@ -25,7 +25,13 @@ pub struct Julia {
     stale: bool,
 }
 
-const MAX_ITERATIONS: i32 = 100;
+const MAX_ITERATIONS: i32 = 400;
+
+impl Default for Julia {
+    fn default() -> Julia {
+        Julia::new(400, 400)
+    }
+}
 
 impl Julia {
     pub fn new(w: usize, h: usize) -> Julia {
@@ -35,13 +41,13 @@ impl Julia {
         let start = Vec4::new(1.0, 0.4, 0.0, 1.0);
         let end = Vec4::new(0.9, 0.7, 0.0, 1.0);
         for i in 0..MAX_ITERATIONS/2 {
-            colour_palette.push(start.lerp(end, i as f32/(MAX_ITERATIONS/2) as f32));
+            colour_palette.push(start.lerp(end, i as f64/(MAX_ITERATIONS/2) as f64));
         };
 
         let start = Vec4::new(0.9, 0.7, 0.0, 1.0);
         let end = Vec4::new(0.2, 0.7, 0.5, 1.0);
         for i in 0..MAX_ITERATIONS/2 {
-            colour_palette.push(start.lerp(end, i as f32/(MAX_ITERATIONS/2) as f32));
+            colour_palette.push(start.lerp(end, i as f64/(MAX_ITERATIONS/2) as f64));
         };
 
         let mut x = Julia {
@@ -51,8 +57,8 @@ impl Julia {
             stale: true,
             buf: Vec::new(),
             colour_palette: colour_palette,
-            a_slider: FloatSlider::new(0.25, -(2.0f32.sqrt()), 2.0f32.sqrt(), "re".to_string()),
-            b_slider: FloatSlider::new(0.0, -(2.0f32.sqrt()), 2.0f32.sqrt(), "im".to_string(),),
+            a_slider: FloatSlider::new(0.25, -(2.0f64.sqrt()), 2.0f64.sqrt(), "re".to_string()),
+            b_slider: FloatSlider::new(0.0, -(2.0f64.sqrt()), 2.0f64.sqrt(), "im".to_string(),),
             r_slider: FloatSlider::new(0.25, 0.0, 2.0, "mag".to_string()),
             theta_slider: FloatSlider::new(0.0, -PI, PI, "angle".to_string(),),
         };
@@ -73,8 +79,8 @@ impl Julia {
                 let jre = self.a_slider.curr;
                 let jim = self.b_slider.curr;
 
-                let x0 = self.r.left() + (i as f32 + 0.5) * self.r.w / self.w as f32;
-                let y0 = -self.r.bot() + (j as f32 + 0.5) * self.r.h / self.h as f32;
+                let x0 = self.r.left() + (i as f64 + 0.5) * self.r.w / self.w as f64;
+                let y0 = -self.r.bot() + (j as f64 + 0.5) * self.r.h / self.h as f64;
 
                 let mut z = Complex::new(x0, y0);
                 let c = Complex::new(jre, jim);
@@ -92,7 +98,7 @@ impl Julia {
     }
 }
 
-impl DoFrame for Julia {
+impl Demo for Julia {
     fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {    
         if inputs.key_falling(VirtualKeyCode::R) {
             *self = Julia::new(self.w, self.h);

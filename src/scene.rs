@@ -4,6 +4,10 @@ use crate::kinput::*;
 use crate::texture_buffer::*;
 use crate::kmath::*;
 
+pub fn init_demo<T: Demo + Default + 'static>() -> Box<dyn Demo> {
+    Box::new(T::default())
+}
+
 pub struct FrameOutputs {
     pub canvas: SimpleCanvas,
     pub set_texture: Vec<(TextureBuffer, usize)>,
@@ -12,7 +16,7 @@ pub struct FrameOutputs {
 }
 
 impl FrameOutputs {
-    pub fn new(a: f32) -> FrameOutputs {
+    pub fn new(a: f64) -> FrameOutputs {
         FrameOutputs {
             glyphs: GlyphBuffer::new(),
             canvas: SimpleCanvas::new(a),
@@ -22,6 +26,6 @@ impl FrameOutputs {
     }
 }
 
-pub trait DoFrame {
+pub trait Demo {
     fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs);
 }

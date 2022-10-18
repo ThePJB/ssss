@@ -1,4 +1,4 @@
-use crate::{scene::{DoFrame, FrameOutputs}, kinput::FrameInputState};
+use crate::{scene::{Demo, FrameOutputs}, kinput::FrameInputState};
 use crate::kmath::*;
 use crate::texture_buffer::*;
 
@@ -70,11 +70,17 @@ impl RGBWalk {
     }
 }
 
-impl DoFrame for RGBWalk {
+impl Default for RGBWalk {
+    fn default() -> Self {
+        Self::new(200, 200, 2)
+    }
+}
+
+impl Demo for RGBWalk {
     fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {
         self.frame += 1;
 
-        let steps_per_frame = (((self.frame as f32 * 0.01).sin() + 1.0) * self.steps_per_frame as f32) as usize;
+        let steps_per_frame = (((self.frame as f64 * 0.01).sin() + 1.0) * self.steps_per_frame as f64) as usize;
 
         // head colour
         // de grey ifying: bottom one gets zerod
@@ -95,15 +101,15 @@ impl DoFrame for RGBWalk {
             // let head_colour = [255, 255, 255];
             // head_colour[hc_min] = 0;
 
-            self.grid[(self.w as i32 * self.head_y + self.head_x) as usize] = Vec4::new(head_colour[0] as f32 / 255.0, head_colour[1] as f32 / 255.0, head_colour[2] as f32 / 255.0, 1.0);
+            self.grid[(self.w as i32 * self.head_y + self.head_x) as usize] = Vec4::new(head_colour[0] as f64 / 255.0, head_colour[1] as f64 / 255.0, head_colour[2] as f64 / 255.0, 1.0);
             self.heat[(self.w as i32 * self.head_y + self.head_x) as usize] += 1;
             if self.heat[(self.w as i32 * self.head_y + self.head_x) as usize] > self.highest_heat {
                 self.highest_heat = self.heat[(self.w as i32 * self.head_y + self.head_x) as usize];
             }
 
             if self.evil_head {
-                // self.grid[(self.w as i32 * (self.h as i32 - self.head_y - 1) + (self.w as i32 - self.head_x - 1)) as usize] = Vec4::new(1.0 - head_colour[0] as f32 / 255.0, 1.0 - head_colour[1] as f32 / 255.0, 1.0 - head_colour[2] as f32 / 255.0, 1.0);
-                self.grid[(self.w as i32 * (self.h as i32 - self.head_y - 1) + (self.w as i32 - self.head_x - 1)) as usize] = Vec4::new(head_colour[0] as f32 / 255.0, head_colour[1] as f32 / 255.0, head_colour[2] as f32 / 255.0, 1.0);
+                // self.grid[(self.w as i32 * (self.h as i32 - self.head_y - 1) + (self.w as i32 - self.head_x - 1)) as usize] = Vec4::new(1.0 - head_colour[0] as f64 / 255.0, 1.0 - head_colour[1] as f64 / 255.0, 1.0 - head_colour[2] as f64 / 255.0, 1.0);
+                self.grid[(self.w as i32 * (self.h as i32 - self.head_y - 1) + (self.w as i32 - self.head_x - 1)) as usize] = Vec4::new(head_colour[0] as f64 / 255.0, head_colour[1] as f64 / 255.0, head_colour[2] as f64 / 255.0, 1.0);
                 self.heat[(self.w as i32 * (self.h as i32 - self.head_y - 1) + (self.w as i32 - self.head_x - 1)) as usize] += 1;
             }
             if self.states_to_go > 0 {
@@ -159,7 +165,7 @@ impl DoFrame for RGBWalk {
         for i in 0..tw {
             for j in 0..th {
                 t.set(i as i32, j as i32, self.grid[j * self.w + i]);
-                // let heat = (self.heat[j * self.w + i] - self.lowest_heat) as f32 / self.highest_heat as f32;
+                // let heat = (self.heat[j * self.w + i] - self.lowest_heat) as f64 / self.highest_heat as f64;
                 // t.set(i as i32, j as i32, heat * Vec4::new(1.0, 0.0, 0.0, 1.0));
             }
         }

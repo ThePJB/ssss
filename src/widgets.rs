@@ -3,15 +3,15 @@ use crate::scene::*;
 use crate::kinput::*;
 
 pub struct FloatSlider {
-    pub curr: f32,
-    pub min: f32,
-    pub max: f32,
+    pub curr: f64,
+    pub min: f64,
+    pub max: f64,
     pub held: bool,
     pub label: String,
 }
 
 impl FloatSlider {
-    pub fn new(default: f32, min: f32, max: f32, label: String) -> FloatSlider {
+    pub fn new(default: f64, min: f64, max: f64, label: String) -> FloatSlider {
         FloatSlider {
             curr: default, 
             min, 

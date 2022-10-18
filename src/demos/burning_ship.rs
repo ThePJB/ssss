@@ -18,6 +18,12 @@ pub struct BurningShip {
 
 const MAX_ITERATIONS: i32 = 160;
 
+impl Default for BurningShip {
+    fn default() -> BurningShip {
+        BurningShip::new(400, 400)
+    }
+}
+
 impl BurningShip {
     pub fn new(w: usize, h: usize) -> BurningShip {
         let mut colour_palette = Vec::new();
@@ -26,13 +32,13 @@ impl BurningShip {
         let start = Vec4::new(1.0, 0.4, 0.0, 1.0);
         let end = Vec4::new(0.9, 0.7, 0.0, 1.0);
         for i in 0..MAX_ITERATIONS/2 {
-            colour_palette.push(start.lerp(end, i as f32/(MAX_ITERATIONS/2) as f32));
+            colour_palette.push(start.lerp(end, i as f64/(MAX_ITERATIONS/2) as f64));
         };
 
         let start = Vec4::new(0.9, 0.7, 0.0, 1.0);
         let end = Vec4::new(0.2, 0.7, 0.5, 1.0);
         for i in 0..MAX_ITERATIONS/2 {
-            colour_palette.push(start.lerp(end, i as f32/(MAX_ITERATIONS/2) as f32));
+            colour_palette.push(start.lerp(end, i as f64/(MAX_ITERATIONS/2) as f64));
         };
 
         let mut x = BurningShip {
@@ -58,8 +64,8 @@ impl BurningShip {
                 // convert to float (im) for each pixel coordinate
                 let mut it = 0;
 
-                let x0 = self.r.left() + (i as f32 + 0.5) * self.r.w / self.w as f32;
-                let y0 = -self.r.bot() + (j as f32 + 0.5) * self.r.h / self.h as f32;
+                let x0 = self.r.left() + (i as f64 + 0.5) * self.r.w / self.w as f64;
+                let y0 = -self.r.bot() + (j as f64 + 0.5) * self.r.h / self.h as f64;
                 let y0 = -y0;
 
 
@@ -79,7 +85,7 @@ impl BurningShip {
     }
 }
 
-impl DoFrame for BurningShip {
+impl Demo for BurningShip {
     fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {    
         if inputs.key_falling(VirtualKeyCode::R) {
             *self = BurningShip::new(self.w, self.h);

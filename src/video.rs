@@ -8,8 +8,8 @@ use crate::renderers::font_rendering::*;
 pub struct Video {
     pub gl: glow::Context,
     pub window: glutin::WindowedContext<glutin::PossiblyCurrent>,
-    pub xres: f32,
-    pub yres: f32,
+    pub xres: f64,
+    pub yres: f64,
 
     pub simple_renderer: SimpleRenderer,
     pub texture_renderer: TextureRenderer,
@@ -17,7 +17,7 @@ pub struct Video {
 }
 
 impl Video {
-    pub fn new(title: &str, xres: f32, yres: f32, event_loop: &glutin::event_loop::EventLoop<()>) -> Video {
+    pub fn new(title: &str, xres: f64, yres: f64, event_loop: &glutin::event_loop::EventLoop<()>) -> Video {
         let window_builder = glutin::window::WindowBuilder::new()
             .with_title(title)
             .with_inner_size(glutin::dpi::PhysicalSize::new(xres, yres));
@@ -61,7 +61,7 @@ impl Video {
         }
     }
 
-    pub fn render(&mut self, outputs: &FrameOutputs, a: f32) {
+    pub fn render(&mut self, outputs: &FrameOutputs, a: f64) {
         unsafe {
             for (buf, idx) in &outputs.set_texture {
                 self.texture_renderer.update(&self.gl, buf, *idx);

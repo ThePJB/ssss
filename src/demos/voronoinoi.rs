@@ -7,6 +7,12 @@ use std::collections::HashSet;
 
 use std::hash::{Hash, Hasher};
 
+impl Default for Voronoinoi {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // how to even make this again: from delauney? I must of did it for that kingdom sim
 // bowyer watson is the go
 // add triangles one at a time
@@ -18,7 +24,7 @@ use std::hash::{Hash, Hasher};
 // also probably like a quadtree or just grid indexing for the lookups
 // circumcenter or centroid of circle is the voronoi point?
 
-fn det4(a: [[f32;4];4]) -> f32 {
+fn det4(a: [[f64;4];4]) -> f64 {
     let s1=a[0][0]*(a[1][1]*(a[2][2]*a[3][3]-a[3][2]*a[2][3])-a[1][2]*(a[2][1]*a[3][3]-a[2][3]*a[3][1])+a[1][3]*(a[2][1]*a[3][2]-a[2][2]*a[3][1]));
     let s2=a[0][1]*(a[1][0]*(a[2][2]*a[3][3]-a[3][2]*a[2][3])-a[1][2]*(a[2][0]*a[3][3]-a[2][3]*a[3][0])+a[1][3]*(a[2][0]*a[3][2]-a[2][2]*a[3][0]));
     let s3=a[0][2]*(a[1][0]*(a[2][1]*a[3][3]-a[3][1]*a[2][3])-a[1][1]*(a[2][0]*a[3][3]-a[2][3]*a[3][0])+a[1][3]*(a[2][0]*a[3][1]-a[2][1]*a[3][0]));
@@ -221,7 +227,7 @@ impl Voronoinoi {
     }
 }
 
-impl DoFrame for Voronoinoi {
+impl Demo for Voronoinoi {
     fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {    
         for i in 0..self.g.centers.len() {
             for n in &self.g.center_neighbours[i] {

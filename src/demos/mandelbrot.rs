@@ -21,12 +21,18 @@ pub struct Mandelbrot {
 
     stale: bool,
 
-    path_c: Option<Complex<f32>>,
+    path_c: Option<Complex<f64>>,
 }
 
-const MAX_ITERATIONS: i32 = 1600;
+const MAX_ITERATIONS: i32 = 800;
 
 // have a rule like colour changes every doubling
+
+impl Default for Mandelbrot {
+    fn default() -> Mandelbrot {
+        Mandelbrot::new(800, 800)
+    }
+}
 
 impl Mandelbrot {
     pub fn new(w: usize, h: usize) -> Mandelbrot {
@@ -36,9 +42,9 @@ impl Mandelbrot {
         let mut i = 0;
         colour_palette.push(Vec4::new(0.0, 0.0, 0.0, 1.0));
         while colour_palette.len() < MAX_ITERATIONS as usize {
-            let colour_start = Vec4::new(137.5 * i as f32, 1.0, 1.0, 1.0).hsv_to_rgb();
-            let colour_end = Vec4::new(137.5 * (i+1) as f32, 1.0, 1.0, 1.0).hsv_to_rgb();
-            colour_palette.push(colour_start.lerp(colour_end, pc as f32 / period as f32));
+            let colour_start = Vec4::new(137.5 * i as f64, 1.0, 1.0, 1.0).hsv_to_rgb();
+            let colour_end = Vec4::new(137.5 * (i+1) as f64, 1.0, 1.0, 1.0).hsv_to_rgb();
+            colour_palette.push(colour_start.lerp(colour_end, pc as f64 / period as f64));
             pc += 1;
             if pc == period {
                 period *= 2;
@@ -51,13 +57,13 @@ impl Mandelbrot {
         // let start = Vec4::new(1.0, 0.4, 0.0, 1.0);
         // let end = Vec4::new(0.9, 0.7, 0.0, 1.0);
         // for i in 0..MAX_ITERATIONS/2 {
-        //     colour_palette.push(start.lerp(end, i as f32/(MAX_ITERATIONS/2) as f32));
+        //     colour_palette.push(start.lerp(end, i as f64/(MAX_ITERATIONS/2) as f64));
         // };
 
         // let start = Vec4::new(0.9, 0.7, 0.0, 1.0);
         // let end = Vec4::new(0.2, 0.7, 0.5, 1.0);
         // for i in 0..MAX_ITERATIONS/2 {
-        //     colour_palette.push(start.lerp(end, i as f32/(MAX_ITERATIONS/2) as f32));
+        //     colour_palette.push(start.lerp(end, i as f64/(MAX_ITERATIONS/2) as f64));
         // };
 
         let mut x = Mandelbrot {
@@ -103,7 +109,7 @@ impl Mandelbrot {
     }
 }
 
-impl DoFrame for Mandelbrot {
+impl Demo for Mandelbrot {
     fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {    
         if inputs.key_falling(VirtualKeyCode::R) {
             *self = Mandelbrot::new(self.w, self.h);

@@ -112,7 +112,7 @@ impl TextureRenderer {
             }
         }
         
-        pub fn render(&self, gl: &glow::Context, rect: Rect, a: f32, texture: usize) {
+        pub fn render(&self, gl: &glow::Context, rect: Rect, a: f64, texture: usize) {
             unsafe {
             gl.bind_texture(glow::TEXTURE_2D, Some(self.textures[texture]));
             gl.use_program(Some(self.program));
@@ -158,7 +158,7 @@ impl TextureRenderer {
 
             let mut buf = Vec::<u8>::new();
             for f in buf_floats {
-                for b in f.to_le_bytes() {
+                for b in (f as f32).to_le_bytes() {
                     buf.push(b);
                 }
             }

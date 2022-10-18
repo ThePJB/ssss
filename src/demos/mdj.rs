@@ -23,6 +23,12 @@ pub struct MDJ {
 
 const MAX_ITERATIONS: i32 = 160;
 
+impl Default for MDJ {
+    fn default() -> Self {
+        Self::new(800, 800)
+    }
+}
+
 impl MDJ {
     pub fn new(w: usize, h: usize) -> MDJ {
         let mut colour_palette = Vec::new();
@@ -31,13 +37,13 @@ impl MDJ {
         let start = Vec4::new(1.0, 0.4, 0.0, 1.0);
         let end = Vec4::new(0.9, 0.7, 0.0, 1.0);
         for i in 0..MAX_ITERATIONS/2 {
-            colour_palette.push(start.lerp(end, i as f32/(MAX_ITERATIONS/2) as f32));
+            colour_palette.push(start.lerp(end, i as f64/(MAX_ITERATIONS/2) as f64));
         };
 
         let start = Vec4::new(0.9, 0.7, 0.0, 1.0);
         let end = Vec4::new(0.2, 0.7, 0.5, 1.0);
         for i in 0..MAX_ITERATIONS/2 {
-            colour_palette.push(start.lerp(end, i as f32/(MAX_ITERATIONS/2) as f32));
+            colour_palette.push(start.lerp(end, i as f64/(MAX_ITERATIONS/2) as f64));
         };
 
         let mut x = MDJ {
@@ -66,8 +72,8 @@ impl MDJ {
                 // convert to float (im) for each pixel coordinate
                 let mut it = 0;
 
-                let x0 = self.r.left() + (i as f32 + 0.5) * self.r.w / self.w as f32;
-                let y0 = -self.r.bot() + (j as f32 + 0.5) * self.r.h / self.h as f32;
+                let x0 = self.r.left() + (i as f64 + 0.5) * self.r.w / self.w as f64;
+                let y0 = -self.r.bot() + (j as f64 + 0.5) * self.r.h / self.h as f64;
                 let y0 = -y0;
 
 
@@ -96,8 +102,8 @@ impl MDJ {
                 // convert to float (im) for each pixel coordinate
                 let mut it = 0;
 
-                let x0 = self.jr.left() + (i as f32 + 0.5) * self.jr.w / self.w as f32;
-                let y0 = -self.jr.bot() + (j as f32 + 0.5) * self.jr.h / self.h as f32;
+                let x0 = self.jr.left() + (i as f64 + 0.5) * self.jr.w / self.w as f64;
+                let y0 = -self.jr.bot() + (j as f64 + 0.5) * self.jr.h / self.h as f64;
                 let y0 = -y0;
 
                 let c = Vec2::new(self.julia_point.x, self.julia_point.y);
@@ -116,7 +122,7 @@ impl MDJ {
     }
 }
 
-impl DoFrame for MDJ {
+impl Demo for MDJ {
     fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {    
         let r = inputs.screen_rect.fit_aspect_ratio(2.0);
         let (r, jr) = r.split_lr(0.5);

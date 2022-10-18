@@ -1,4 +1,4 @@
-use crate::{scene::{DoFrame, FrameOutputs}, kinput::FrameInputState};
+use crate::{scene::{Demo, FrameOutputs}, kinput::FrameInputState};
 use crate::kmath::*;
 use crate::texture_buffer::*;
 
@@ -8,8 +8,8 @@ use crate::texture_buffer::*;
 
 #[derive(Clone)]
 pub enum Tile {
-    Predator(f32),
-    Prey(f32),
+    Predator(f64),
+    Prey(f64),
     Food,
     Empty,
 }
@@ -19,19 +19,25 @@ pub struct PredatorPrey {
     w: usize,
     h: usize,
 
-    p_food: f32,
-    e_food: f32,
-    prey_e_reproduce: f32,
+    p_food: f64,
+    e_food: f64,
+    prey_e_reproduce: f64,
     
-    e_prey: f32,
-    pred_e_reproduce: f32,
+    e_prey: f64,
+    pred_e_reproduce: f64,
 
-    pred_e_decay: f32,
-    prey_e_decay: f32,
+    pred_e_decay: f64,
+    prey_e_decay: f64,
 
     num_pred: i32,
     num_prey: i32,
     num_food: i32,
+}
+
+impl Default for PredatorPrey {
+    fn default() -> Self {
+        Self::new(400, 400)
+    }
 }
 
 impl PredatorPrey {
@@ -93,7 +99,7 @@ impl PredatorPrey {
 
 // hmm not dying but reproducing, interesting
 
-impl DoFrame for PredatorPrey {
+impl Demo for PredatorPrey {
     fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {
 
         // println!("pred: {} prey: {} food: {}", self.num_pred, self.num_prey, self.num_food);
@@ -123,7 +129,7 @@ impl DoFrame for PredatorPrey {
             let idx = *idx;
             match self.grid[idx] {
                 Tile::Predator(pred_energy) => {
-                    let pred_energy = pred_energy - self.pred_e_decay * inputs.dt as f32;
+                    let pred_energy = pred_energy - self.pred_e_decay * inputs.dt as f64;
                     let mut move_options = Vec::new();
                     if idx > self.w {
                         move_options.push(idx - self.w);
@@ -184,7 +190,7 @@ impl DoFrame for PredatorPrey {
             let idx = *idx;
             match self.grid[idx] {
                 Tile::Prey(prey_energy) => {
-                    let prey_energy = prey_energy - self.prey_e_decay * inputs.dt as f32;
+                    let prey_energy = prey_energy - self.prey_e_decay * inputs.dt as f64;
                     let mut move_options = Vec::new();
                     if idx > self.w {
                         move_options.push(idx - self.w);
@@ -244,7 +250,7 @@ impl DoFrame for PredatorPrey {
             let idx = *idx;
             match self.grid[idx] {
                 Tile::Empty => {
-                    if chance(inputs.seed * 129837715 + idx as u32 * 91238754, inputs.dt as f32 * self.p_food) {
+                    if chance(inputs.seed * 129837715 + idx as u32 * 91238754, inputs.dt as f64 * self.p_food) {
                         self.grid[idx] = Tile::Food;
                         self.num_food += 1;
                     } else {
