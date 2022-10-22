@@ -68,12 +68,12 @@ impl Demo for RootScene {
             self.show_menu = false;
         }
 
-        if inputs.key_rising(VirtualKeyCode::K) {
+        if inputs.key_press_or_repeat(VirtualKeyCode::K) {
             if self.idx > 0 {
                 self.idx = self.idx - 1;
             }
         }
-        if inputs.key_rising(VirtualKeyCode::J) {
+        if inputs.key_press_or_repeat(VirtualKeyCode::J) {
             if self.idx < self.demo_table.len() - 1 {
                 self.idx = self.idx + 1;
             }

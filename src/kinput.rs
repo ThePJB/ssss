@@ -30,10 +30,12 @@ pub struct FrameInputState {
     
     pub prev_keys: HashSet<VirtualKeyCode>,
     pub curr_keys: HashSet<VirtualKeyCode>,
+    pub repeat_keys: HashSet<VirtualKeyCode>,
 
     pub lmb: KeyStatus,
     pub rmb: KeyStatus,
     pub mmb: KeyStatus,
+    pub scroll_delta: f64,
     pub t: f64,
     pub dt: f64,
     pub frame: u32,
@@ -47,12 +49,22 @@ impl FrameInputState {
     pub fn key_rising(&self, keycode: VirtualKeyCode) -> bool {
         self.curr_keys.contains(&keycode) && !self.prev_keys.contains(&keycode)
     }
+    pub fn key_press_or_repeat(&self, keycode: VirtualKeyCode) -> bool {
+        (self.curr_keys.contains(&keycode) && !self.prev_keys.contains(&keycode)) || self.repeat_keys.contains(&keycode)
+    }
     pub fn key_falling(&self, keycode: VirtualKeyCode) -> bool {
         !self.curr_keys.contains(&keycode) && self.prev_keys.contains(&keycode)
     }
 }
+// yeah how do I get / ignore key repeats
+// should be like
+// released
+// pressed
+// pressed_or_repeat
+// held
 
 // Its basically just a state machine to go from events to polling behaviour
+
 pub struct EventAggregator {
     xres: f64,
     yres: f64,
@@ -72,8 +84,10 @@ impl EventAggregator {
                 screen_rect: Rect::new(0.0, 0.0, xres/yres, 1.0, ), 
                 mouse_pos: Vec2::new(0.0, 0.0), 
                 mouse_delta: Vec2::new(0.0, 0.0), 
+                scroll_delta: 0.0,
                 curr_keys: HashSet::new(),
                 prev_keys: HashSet::new(),
+                repeat_keys: HashSet::new(),
                 lmb: KeyStatus::Released, 
                 rmb: KeyStatus::Released, 
                 mmb: KeyStatus::Released, 
@@ -95,7 +109,11 @@ impl EventAggregator {
                     ..},
                 ..} => {
                     if *state == ElementState::Pressed {
-                        self.current.curr_keys.insert(*virtual_code);
+                        if self.current.curr_keys.contains(virtual_code) {
+                            self.current.repeat_keys.insert(*virtual_code);
+                        } else {
+                            self.current.curr_keys.insert(*virtual_code);
+                        }
                     } else {
                         self.current.curr_keys.remove(virtual_code);
                     }
@@ -120,6 +138,18 @@ impl EventAggregator {
                         self.current.rmb = KeyStatus::JustPressed;
                     } else {
                         self.current.rmb = KeyStatus::JustReleased;
+                    }
+                },
+
+                // Scroll
+                glutin::event::WindowEvent::MouseWheel { delta, ..} => {
+                    match delta {
+                        glutin::event::MouseScrollDelta::LineDelta(_, y) => {
+                            self.current.scroll_delta = *y as f64;
+                        },
+                        glutin::event::MouseScrollDelta::PixelDelta(p) => {
+                            self.current.scroll_delta = p.y;
+                        },
                     }
                 },
 
@@ -155,7 +185,9 @@ impl EventAggregator {
                 self.current.mouse_pos = self.instant_mouse_pos;
                 let state = self.current.clone();
                 self.current.prev_keys = self.current.curr_keys.clone();
+                self.current.repeat_keys = HashSet::new();
                 self.current.seed = khash(self.current.seed * 196513497);
+                self.current.scroll_delta = 0.0;
                 self.current.lmb = match self.current.lmb {KeyStatus::JustPressed | KeyStatus::Pressed => KeyStatus::Pressed, KeyStatus::JustReleased | KeyStatus::Released => KeyStatus::Released};
                 self.current.mmb = match self.current.mmb {KeyStatus::JustPressed | KeyStatus::Pressed => KeyStatus::Pressed, KeyStatus::JustReleased | KeyStatus::Released => KeyStatus::Released};
                 self.current.rmb = match self.current.rmb {KeyStatus::JustPressed | KeyStatus::Pressed => KeyStatus::Pressed, KeyStatus::JustReleased | KeyStatus::Released => KeyStatus::Released};

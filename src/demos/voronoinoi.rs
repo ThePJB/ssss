@@ -13,17 +13,6 @@ impl Default for Voronoinoi {
     }
 }
 
-// how to even make this again: from delauney? I must of did it for that kingdom sim
-// bowyer watson is the go
-// add triangles one at a time
-
-// I think bowyer watson can add delauney points while goin
-// yea the points are the same, and then voronoi vertexes are the centroid of the triangles I assume
-
-// suspect there will be a more optimal way of storage, like half edges with gen idx for adding and deleting
-// also probably like a quadtree or just grid indexing for the lookups
-// circumcenter or centroid of circle is the voronoi point?
-
 fn det4(a: [[f64;4];4]) -> f64 {
     let s1=a[0][0]*(a[1][1]*(a[2][2]*a[3][3]-a[3][2]*a[2][3])-a[1][2]*(a[2][1]*a[3][3]-a[2][3]*a[3][1])+a[1][3]*(a[2][1]*a[3][2]-a[2][2]*a[3][1]));
     let s2=a[0][1]*(a[1][0]*(a[2][2]*a[3][3]-a[3][2]*a[2][3])-a[1][2]*(a[2][0]*a[3][3]-a[2][3]*a[3][0])+a[1][3]*(a[2][0]*a[3][2]-a[2][2]*a[3][0]));
@@ -100,7 +89,7 @@ impl Demo for Voronoinoi {
         if inputs.key_rising(VirtualKeyCode::X) {
             self.play = !self.play;
         }
-        if self.play && inputs.t - self.last_step > 0.5 {
+        if self.play && inputs.t - self.last_step > 0.25 {
             self.g.step();
             self.last_step = inputs.t;
         }
@@ -125,9 +114,10 @@ impl Demo for Voronoinoi {
 
         match self.g.state {
             BWState::BadEdges | BWState::BadTriangles | BWState::NewTriangles => {
+                let s = 0.03;
                 let x = self.g.new_point.unwrap().x;
                 let y = self.g.new_point.unwrap().y;
-                outputs.canvas.put_rect(Rect::new_centered(x, y, 0.05, 0.05), 2.2, Vec4::new(1.0, 1.0, 1.0, 1.0));
+                outputs.canvas.put_rect(Rect::new_centered(x, y, s, s), 2.2, Vec4::new(1.0, 1.0, 1.0, 1.0));
             },
             _ => {},
         }

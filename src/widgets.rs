@@ -30,12 +30,23 @@ impl FloatSlider {
     }
 
     pub fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs, r: Rect) -> bool {
+        let mut any_change = false;
         if inputs.lmb == KeyStatus::JustPressed && r.contains(inputs.mouse_pos) {
             self.held = true;
         }
 
 
-        // todo scroll mouse for fine adjustment
+        // fine
+        if r.contains(inputs.mouse_pos) {
+            if inputs.scroll_delta > 0.0 {
+                self.t = (self.t + 0.0005).min(1.0);
+                any_change = true;
+            }
+            if inputs.scroll_delta < 0.0 {
+                self.t = (self.t - 0.0005).max(0.0);
+                any_change = true;
+            }
+        }
 
         // text stuff
         let a = 12.0 / 14.0;
@@ -107,6 +118,6 @@ impl FloatSlider {
         if self.held && inputs.lmb == KeyStatus::Pressed && inputs.mouse_delta != Vec2::new(0.0, 0.0) {
             return true;
         }
-        return false;
+        return any_change;
     }
 }
