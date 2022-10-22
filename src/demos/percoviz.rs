@@ -125,7 +125,7 @@ impl Demo for Percoviz {
         let mut change = self.edge_chance_slider.frame(inputs, outputs, inputs.screen_rect.grid_child(8, 0, 10, 3));
         change |= self.edge_chance_fine_slider.frame(inputs, outputs, inputs.screen_rect.grid_child(9, 0, 10, 3));
         if change {
-            self.edge_chance = self.edge_chance_slider.curr + self.edge_chance_fine_slider.curr;
+            self.edge_chance = self.edge_chance_slider.curr() + self.edge_chance_fine_slider.curr();
             self.stale = true;
         }
 

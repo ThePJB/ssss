@@ -6,9 +6,9 @@ pub fn glyph_buffer_to_canvas(buf: &GlyphBuffer, a: f64) -> CTCanvas {
         if c >= 'a' as u8 && c <= 'z' as u8 {
             c -= 'a' as u8 - 'A' as u8;
         }
-        if c >= '.' as u8 && c <= '_' as u8 {
-            let x = c - '.' as u8;
-            let w = '_' as u8 - '.' as u8 + 1; // maybe +1
+        if c >= '-' as u8 && c <= '_' as u8 {
+            let x = c - '-' as u8;
+            let w = '_' as u8 - '-' as u8 + 1; // maybe +1
             Some(Rect::new(0.0, 0.0, 1.0, 1.0).grid_child(x as i32, 0, w as i32, 1))
         } else {
             None
@@ -53,5 +53,32 @@ impl GlyphBuffer {
             self.push_glyph(c, Rect::new(x, y, w, h), d, colour);
             x += w;
         }
+    }
+
+    pub fn push_center_str(&mut self, s: &str, mut x: f64, y: f64, w: f64, h: f64, d: f64, colour: Vec4) {
+        let max_w = s.len() as f64 * w;
+        x = x - max_w / 2.0;
+        for c in s.chars() {
+            self.push_glyph(c, Rect::new(x, y, w, h), d, colour);
+            x += w;
+        }
+    }
+
+    // takes a rect: height of rect is char height, and char a
+    pub fn pushl(&mut self, r: Rect, s: &str, a: f64, c: Vec4, d: f64) {
+        let mut x = r.x;
+
+        let w = r.h * a;
+        for ch in s.chars() {
+            self.push_glyph(ch, Rect::new(x, r.y, w, r.h), d, c);
+            x += w;
+        }
+    }
+
+    pub fn pushc(&mut self, mut r: Rect, s: &str, a: f64, c: Vec4, d: f64) {
+        let w = r.h * a;
+        r.x -= (w * s.len() as f64)/2.0;
+        r.x += r.w / 2.0;
+        self.pushl(r, s, a, c, d);
     }
 }

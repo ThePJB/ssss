@@ -1,4 +1,5 @@
 pub use std::f64::consts::PI;
+pub static DEG_TO_RAD: f64 = 180.0 / PI;
 
 /***************************************************
  * Easing
@@ -135,6 +136,9 @@ impl Vec2 {
         let c = other.x;
         let d = other.y;
         Vec2::new(a*c - b*d, a*d + c*b)
+    }
+    pub fn rect_centered(&self, w: f64, h: f64) -> Rect {
+        Rect::new(self.x - w/2.0, self.y - h/2.0, w, h)
     }
     
 }
@@ -319,6 +323,15 @@ impl Vec4 {
             5 => Vec4::new(v, p, q, self.w),
             _ => panic!("unreachable"),
         }
+    }
+
+    // h in degrees
+    pub fn from_hsv(h: f64, s: f64, v: f64, w: f64) -> Vec4 {
+        Vec4::new(h, s, v, w).hsv_to_rgb()
+    }
+
+    pub fn grey(v: f64) -> Vec4 {
+        Vec4::new(v, v, v, 1.0)
     }
 }
 

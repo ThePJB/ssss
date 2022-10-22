@@ -76,8 +76,8 @@ impl Julia {
                 // convert to float (im) for each pixel coordinate
                 let mut it = 0;
 
-                let jre = self.a_slider.curr;
-                let jim = self.b_slider.curr;
+                let jre = self.a_slider.curr();
+                let jim = self.b_slider.curr();
 
                 let x0 = self.r.left() + (i as f64 + 0.5) * self.r.w / self.w as f64;
                 let y0 = -self.r.bot() + (j as f64 + 0.5) * self.r.h / self.h as f64;
@@ -104,6 +104,10 @@ impl Demo for Julia {
             *self = Julia::new(self.w, self.h);
         }
 
+        if inputs.key_falling(VirtualKeyCode::A) {
+            self.a_slider.set_val(0.75);
+        }
+
         if inputs.lmb == KeyStatus::JustPressed && inputs.key_held(VirtualKeyCode::LShift){
             let rp = inputs.mouse_pos.transform(inputs.screen_rect, self.r);
             self.r = Rect::new_centered(rp.x, rp.y, self.r.w*0.5, self.r.h*0.5);
@@ -120,16 +124,16 @@ impl Demo for Julia {
         ab_change |= self.b_slider.frame(inputs, outputs, inputs.screen_rect.grid_child(9, 0, 10, 3));
         if ab_change {
             self.stale = true;
-            self.r_slider.curr = (self.a_slider.curr*self.a_slider.curr + self.b_slider.curr*self.b_slider.curr).sqrt();
-            self.theta_slider.curr = self.b_slider.curr.atan2(self.a_slider.curr);
+            self.r_slider.set_val((self.a_slider.curr()*self.a_slider.curr() + self.b_slider.curr()*self.b_slider.curr()).sqrt());
+            self.theta_slider.set_val(self.b_slider.curr().atan2(self.a_slider.curr()));
         }
 
         let mut rt_change = self.r_slider.frame(inputs, outputs, inputs.screen_rect.grid_child(8, 1, 10, 3));
         rt_change |= self.theta_slider.frame(inputs, outputs, inputs.screen_rect.grid_child(9, 1, 10, 3));
         if rt_change {
             self.stale = true;
-            self.a_slider.curr = self.r_slider.curr * self.theta_slider.curr.cos();
-            self.b_slider.curr = self.r_slider.curr * self.theta_slider.curr.sin();
+            self.a_slider.set_val(self.r_slider.curr() * self.theta_slider.curr().cos());
+            self.b_slider.set_val(self.r_slider.curr() * self.theta_slider.curr().sin());
         }
 
         if self.stale {

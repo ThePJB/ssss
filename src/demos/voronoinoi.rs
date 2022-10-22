@@ -76,27 +76,111 @@ impl Edge {
     fn new(a: usize, b: usize) -> Edge {Edge{a,b}}
 }
 
-// ok its actually correct
-
-// maybe just store edge values and not refs
-pub struct VDGraph {
-    centers: Vec<Vec2>,
-    center_neighbours: Vec<HashSet<usize>>,   // adj idx into edge list
-    tri_points: Vec<[usize;3]>,
-    tri_edges: Vec<[Edge;3]>,
+pub struct Voronoinoi {
+    g: BW,
+    play: bool,
+    last_step: f64,
 }
 
-// tri points could be ordered to contain edge info
+impl Voronoinoi {
+    pub fn new() -> Voronoinoi {
+        Voronoinoi {
+            play: false,
+            last_step: 0.0,
+            g: BW::new(),
+        }
+    }
+}
 
-impl VDGraph {
-    pub fn new() -> VDGraph {
-        let mut vdg = VDGraph {
-            centers: Vec::new(), 
-            center_neighbours: Vec::new(),  
+impl Demo for Voronoinoi {
+    fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {    
+        if inputs.key_rising(VirtualKeyCode::Z) {
+            self.g.step();
+        }
+        if inputs.key_rising(VirtualKeyCode::X) {
+            self.play = !self.play;
+        }
+        if self.play && inputs.t - self.last_step > 0.5 {
+            self.g.step();
+            self.last_step = inputs.t;
+        }
+
+        for tri in self.g.tri_edges.iter() {
+            for edge in tri.iter() {
+                let start = self.g.centers[edge.a];
+                let end = self.g.centers[edge.b];
+                outputs.canvas.put_line(start, end, 0.005, 2.0, Vec4::new(0.6, 0.6, 0.6, 1.0));
+            }
+        }
+
+        if self.g.state == BWState::BadTriangles {
+            for bi in &self.g.bad_triangles {
+                for edge in self.g.tri_edges[*bi].iter() {
+                    let start = self.g.centers[edge.a];
+                    let end = self.g.centers[edge.b];
+                    outputs.canvas.put_line(start, end, 0.005, 2.1, Vec4::new(0.9, 0.0, 0.0, 1.0));
+                }
+            }
+        }
+
+        match self.g.state {
+            BWState::BadEdges | BWState::BadTriangles | BWState::NewTriangles => {
+                let x = self.g.new_point.unwrap().x;
+                let y = self.g.new_point.unwrap().y;
+                outputs.canvas.put_rect(Rect::new_centered(x, y, 0.05, 0.05), 2.2, Vec4::new(1.0, 1.0, 1.0, 1.0));
+            },
+            _ => {},
+        }
+
+        if self.g.state == BWState::BadEdges {
+            for edge in self.g.bad_edges.iter() {
+                let start = self.g.centers[edge.a];
+                let end = self.g.centers[edge.b];
+                outputs.canvas.put_line(start, end, 0.005, 2.0, Vec4::new(0.9, 0.0, 0.0, 1.0));
+            }
+            for edge in &self.g.poly {
+                let start = self.g.centers[edge.a];
+                let end = self.g.centers[edge.b];
+                outputs.canvas.put_line(start, end, 0.005, 2.1, Vec4::new(0.0, 0.0, 0.9, 1.0));
+            }
+        }
+    }
+}
+
+#[derive(PartialEq)]
+enum BWState {
+    AllGood,
+    BadTriangles,
+    BadEdges,
+    NewTriangles,
+}
+
+struct BW {
+    centers: Vec<Vec2>,
+    tri_points: Vec<[usize;3]>,
+    tri_edges: Vec<[Edge;3]>,
+
+    bad_triangles: HashSet<usize>,
+    bad_edges: HashSet<Edge>,
+    poly: HashSet<Edge>,
+    new_point: Option<Vec2>,
+    state: BWState,
+}
+
+impl BW {
+    pub fn new() -> Self {
+        let mut vdg = BW {
+            centers: Vec::new(),
             tri_points: Vec::new(),
             tri_edges: Vec::new(),
-        };
 
+            bad_triangles: HashSet::new(),
+            bad_edges: HashSet::new(),
+            poly: HashSet::new(),
+            new_point: None,
+            state: BWState::AllGood,
+        };
+        
         vdg.centers.push(Vec2::new(0.0, 0.0));
         vdg.centers.push(Vec2::new(1.0, 0.0));
         vdg.centers.push(Vec2::new(1.0, 1.0));
@@ -107,158 +191,65 @@ impl VDGraph {
         vdg.tri_edges.push([Edge::new(1, 2), Edge::new(2, 3), Edge::new(1, 3)]);
         vdg.tri_points.push([1, 2, 3]);
 
-
-        vdg.center_neighbours.push(HashSet::from([1, 3]));
-        vdg.center_neighbours.push(HashSet::from([0, 2, 3]));
-        vdg.center_neighbours.push(HashSet::from([1, 3]));
-        vdg.center_neighbours.push(HashSet::from([0, 1, 3]));
-
         vdg
     }
 
-    pub fn insert_point(&mut self, p: Vec2) {
-        println!("inserting {:?} npts: {}, ntris: {}", p, self.centers.len(), self.tri_edges.len());
-        // insert p
-        let p_idx = self.centers.len();
-        self.centers.push(p);
-        self.center_neighbours.push(HashSet::new());
-        // find all bad triangles
-        let mut bad_triangles = Vec::new();
-        for (t_idx, tp) in self.tri_points.iter().enumerate() {
-            if point_in_circumcircle(p, self.centers[tp[0]], self.centers[tp[1]], self.centers[tp[2]]) {
-                bad_triangles.push(t_idx);
-            }
-        }
-        // go through the edges of the bad triangles
-        // only these are points not connections
-        
-        // these are getting overwritten
-        let mut bad_edges = HashSet::new();
-        // by edges from this to p
-        let mut poly = HashSet::new();
-
-        println!("find tris, bt len {}", bad_triangles.len());
-        // its getting stuck in some sort of infinite loop here?
-        // or just marking every single triangle as bad and for some reason there are 25000 triangles
-        for bti in bad_triangles.iter() {
-            for btj in bad_triangles.iter() {
-                if *bti == *btj {
-                    continue;
+    pub fn step(&mut self) {
+        match self.state {
+            BWState::AllGood => {
+                let seed = self.centers.len() as u32;
+                let p = Vec2::new(krand(seed * 12313477), krand(seed * 13165747));
+                self.new_point = Some(p);
+                self.centers.push(p);
+                self.bad_triangles = HashSet::new();
+                for (t_idx, tp) in self.tri_points.iter().enumerate() {
+                    if point_in_circumcircle(p, self.centers[tp[0]], self.centers[tp[1]], self.centers[tp[2]]) {
+                        self.bad_triangles.insert(t_idx);
+                    }
                 }
 
-                let i_edges = self.tri_edges[*bti];
-                let j_edges = self.tri_edges[*btj];
+                self.state = BWState::BadTriangles;
+                println!("bad triangles");
+            },
+            BWState::BadTriangles => {
+                self.bad_edges = HashSet::new();
+                self.poly = HashSet::new();
 
-                for ei in i_edges {
-                    for ej in j_edges {
-                        if ei == ej {
-                            bad_edges.insert(ei);
+                for bt in &self.bad_triangles {
+                    for e in &self.tri_edges[*bt] {
+                        if self.poly.contains(e) {
+                            self.poly.remove(e);
+                            self.bad_edges.insert(*e);
+                        } else {
+                            self.poly.insert(*e);
                         }
                     }
                 }
-                for ei in i_edges {
-                    if !bad_edges.contains(&ei) {
-                        poly.insert(ei);
-                    }
+
+                // delete bad triangles
+                let mut btv: Vec<usize> = self.bad_triangles.iter().map(|x| *x).collect();
+                btv.sort();
+                for bti in btv.iter().rev() {
+                    self.tri_edges.swap_remove(*bti);
+                    self.tri_points.swap_remove(*bti);
                 }
-                for ej in j_edges {
-                    if !bad_edges.contains(&ej) {
-                        poly.insert(ej);
-                    }
+
+                self.state = BWState::BadEdges;
+                println!("bad edges");
+            },
+            BWState::BadEdges => {
+                for poly_edge in &self.poly {
+                    self.tri_edges.push([Edge::new(poly_edge.a, poly_edge.b), Edge::new(poly_edge.b, self.centers.len() - 1), Edge::new(self.centers.len() - 1, poly_edge.a)]);
+                    self.tri_points.push([poly_edge.a, poly_edge.b, self.centers.len() - 1]);
                 }
-            }
-        }
-        println!("delete bad tris");
-        // delete bad triangles
-        let mut idx = (bad_triangles.len() - 1) as i32;
-        while idx >= 0 {
-            self.tri_edges.swap_remove(idx as usize);
-            self.tri_points.swap_remove(idx as usize);
-            idx -= 1;
-        }
-        // put new edges and overwrite bad edges
-        // should be more new edges than bad edges
+                self.state = BWState::NewTriangles;
+                println!("new triangles");
 
-        // ok fuck i need to get just the edges and dedup them, thats why there are too many
-        // println!("poly: {:?}", poly);
-
-        // still needs to not push duplicate edges, just index them
-
-        // remove bad edges
-        println!("removing bad edges");
-        for bad_edge in bad_edges {
-            println!("removing edge between {:?}, center neighs len {}", bad_edge, self.center_neighbours.len());
-            self.center_neighbours[bad_edge.a].retain(|x| *x != bad_edge.b);
-            self.center_neighbours[bad_edge.b].retain(|x| *x != bad_edge.a);
-        }
-
-        println!("update edges etc");
-        for poly_edge in poly {
-            self.center_neighbours[poly_edge.a].insert(p_idx);
-            self.center_neighbours[poly_edge.b].insert(p_idx);
-            self.center_neighbours[p_idx].insert(poly_edge.a);
-            self.center_neighbours[p_idx].insert(poly_edge.b);
-            self.tri_edges.push([Edge::new(poly_edge.a, poly_edge.b), Edge::new(poly_edge.b, p_idx), Edge::new(p_idx, poly_edge.a)]);
-            self.tri_points.push([poly_edge.a, poly_edge.b, p_idx]);
-        }
-        println!("done");
-    }
-}
-
-pub struct Voronoinoi {
-    r: Rect,
-    g: VDGraph,
-}
-
-impl Voronoinoi {
-    pub fn new() -> Voronoinoi {
-        let mut g = VDGraph::new();
-        g.insert_point(Vec2::new(0.25, 0.25));
-        g.insert_point(Vec2::new(0.6, 0.75));
-        // g.insert_point(Vec2::new(0.6, 0.25));
-        // for i in 0..100 {
-        //     g.insert_point(Vec2::new(krand(i), krand(i * 1312377)));
-        // }
-
-        Voronoinoi {
-            r: Rect::new(-2.0, -1.5, 3.0, 3.0),
-            g,
+            },
+            BWState::NewTriangles => {
+                self.state = BWState::AllGood;
+                println!("all good");
+            },
         }
     }
-}
-
-impl Demo for Voronoinoi {
-    fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {    
-        for i in 0..self.g.centers.len() {
-            for n in &self.g.center_neighbours[i] {
-                outputs.canvas.put_line(self.g.centers[i], self.g.centers[*n], 0.005, 2.0, Vec4::new(0.8, 0.0, 0.0, 1.0));
-            }
-        }
-    
-        // for tri in self.g.tri_points.iter() {
-        //     outputs.canvas.put_line(self.g.centers[tri[0]], self.g.centers[tri[1]], 0.005, 2.0, Vec4::new(0.8, 0.8, 0.8, 1.0));
-        //     outputs.canvas.put_line(self.g.centers[tri[2]], self.g.centers[tri[1]], 0.005, 2.0, Vec4::new(0.8, 0.8, 0.8, 1.0));
-        //     outputs.canvas.put_line(self.g.centers[tri[2]], self.g.centers[tri[0]], 0.005, 2.0, Vec4::new(0.8, 0.8, 0.8, 1.0));
-        // }
-    
-        for tri in self.g.tri_edges.iter() {
-            for edge in tri.iter() {
-                let start = self.g.centers[edge.a];
-                let end = self.g.centers[edge.b];
-                outputs.canvas.put_line(start, end, 0.005, 2.0, Vec4::new(0.0, 0.0, 0.8, 1.0));
-            }
-        }
-    }
-}
-
-#[test]
-fn voronoi_test() {
-    let mut g = VDGraph::new();
-    g.insert_point(Vec2::new(0.25, 0.25));
-    g.insert_point(Vec2::new(0.6, 0.75));
-
-    println!("{:?}", g.centers);
-    println!("{:?}", g.center_neighbours);
-    println!("{:?}", g.tri_points);
-    println!("{:?}", g.tri_edges);
 }

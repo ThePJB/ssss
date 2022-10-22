@@ -93,3 +93,37 @@ value noise but the values arent uniform distributed, theyre exp distributed. or
 
 maybe its trait magic needed
 i dont actually want an array of trait objects but I do want a table of function pointers returning trait objects
+
+fancy hashing: just ones that hash into the same bucket
+like kademlia
+you could randomly sample with a hash function
+
+scaledown opportunity: just do everything in NDC space?
+
+Destructo BW: go through and delete all the bad triangles without replacing, would actually be cool
+this is actually a sick re meshing operation, good for level gen
+
+like bruh you could even do a super ghetto version of this
+also makes me think of diamond square
+it actually looks sick. inb4 its actually good
+
+level gen as perturbations of a mesh / bitmap
+
+be good if i had a mesh viewer renderer
+
+could have a triangulation based thing walk around leaving areas 
+
+adding triangles outside ? like get points within radius
+
+you could just walk a random ass triangulizer that picks points within a radius hey
+
+noise where things were instead set to 0 or 1 with a certain probability
+
+
+inputs: scroll mousewheel needs to go in as do key repeats
+
+
+
+you want some composable node structure dont you
+like a scene graph
+monad shit

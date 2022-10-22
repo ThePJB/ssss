@@ -3,7 +3,7 @@ use crate::scene::*;
 use crate::kinput::*;
 
 pub struct FloatSlider {
-    pub curr: f64,
+    pub t: f64, // 1.0 top 0.0 bot
     pub min: f64,
     pub max: f64,
     pub held: bool,
@@ -13,7 +13,7 @@ pub struct FloatSlider {
 impl FloatSlider {
     pub fn new(default: f64, min: f64, max: f64, label: String) -> FloatSlider {
         FloatSlider {
-            curr: default, 
+            t: (default - min) / (max - min),
             min, 
             max,
             held: false,
@@ -21,38 +21,84 @@ impl FloatSlider {
         }
     }
 
+    pub fn set_val(&mut self, val: f64) {
+        self.t = (val - self.min) / (self.max - self.min);
+    }
+
+    pub fn curr(&self) -> f64 {
+        lerp(self.min, self.max, self.t)
+    }
+
     pub fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs, r: Rect) -> bool {
         if inputs.lmb == KeyStatus::JustPressed && r.contains(inputs.mouse_pos) {
             self.held = true;
         }
-        if self.held {
-            // let p = inputs.mouse_pos.transform(inputs.screen_rect, r);
-            // let p = r.relative_point(inputs.mouse_pos);
-            let slider_t = remap(inputs.mouse_pos.y, r.bot(), r.top(), 0.0, 1.0).max(0.0).min(1.0);
-            // let slider_t = 1.0 - p.y.max(0.0).min(1.0);
-            self.curr = lerp(self.min, self.max, slider_t);
-        }
+
 
         // todo scroll mouse for fine adjustment
 
-        // rendering
-        let bg = Vec4::new(1.0, 0.0, 0.2, 1.0).hsv_to_rgb();
-        let fg = Vec4::new(1.0, 0.0, 0.6, 1.0).hsv_to_rgb();
-        let slider_t = unlerp(self.curr, self.min, self.max);
-        outputs.canvas.put_rect(r, 1.0, bg);
-        let (lr,r) = r.split_ud(0.1);
-        let (lr, maxr) = lr.split_ud(0.5);
-        outputs.glyphs.push_str(&self.label, lr.left(), lr.top(), lr.h * 0.7/0.8*0.5, lr.h,  1.5, Vec4::new(1.0, 1.0, 1.0, 1.0));
-        outputs.glyphs.push_str(&format!("{}", self.max), maxr.left(), maxr.top(), lr.h * 0.7/0.8*0.5, maxr.h,  1.5, Vec4::new(0.5, 0.5, 0.5, 1.0));
-        let (r, minr) = r.split_ud(0.95);
-        outputs.glyphs.push_str(&format!("{}", self.min), minr.left(), minr.top(), lr.h * 0.7/0.8*0.5, minr.h,  1.5, Vec4::new(0.5, 0.5, 0.5, 1.0));
-        outputs.canvas.put_rect(r.fit_aspect_ratio(0.02), 1.1, fg);
-        let sx = r.centroid().x;
-        let sy = r.top() + (1.0 - slider_t) * r.h;
-        let sw = r.w;
-        let sh = r.h * 0.1;
-        outputs.canvas.put_rect(Rect::new_centered(sx, sy, sw, sh), 1.6, fg);
-        outputs.glyphs.push_str(&format!("{:.4}", self.curr), sx - sw/2.0, sy - sh/4.0, sh * 0.7/0.8*0.5 / 2.0, sh / 2.0,  1.7, Vec4::new(0.9, 0.9, 0.9, 1.0));
+        // text stuff
+        let a = 12.0 / 14.0;
+
+        // colours
+        let line = Vec4::grey(0.8);
+        let fg = Vec4::grey(0.6);
+        let bg = Vec4::grey(0.2);
+        let text = Vec4::grey(1.0);
+
+        outputs.canvas.put_rect(r, 1.0, line);
+        let r = r.dilate_pc(-0.01);
+        outputs.canvas.put_rect(r, 1.1, bg);
+
+        let top_h = 0.1;
+        let mid_h = 0.85;
+        let bot_h = 0.05;
+        let slider_h = r.h * bot_h;
+
+        // top
+        {
+            let r = r.child(0.0, 0.0, 1.0, top_h);
+            // outputs.canvas.put_rect(r, 5.0, Vec4::new(1.0, 0.0, 0.0, 1.0));
+            let (top, bot) = r.split_ud(0.5);
+            let top = top.dilate_pc(-0.05);
+            let bot = bot.dilate_pc(-0.05);
+            outputs.glyphs.pushc(top, &self.label, a, text, 2.0);
+            let s = &format!("{:.3}", self.max);
+            outputs.glyphs.pushl(bot, s, a, fg, 2.0);
+        }
+        
+        // mid
+        {
+            let r = r.child(0.0, top_h, 1.0, mid_h);
+            let r = r.dilate(-0.01);
+            // outputs.canvas.put_rect(r, 5.0, Vec4::new(0.0, 1.0, 0.0, 1.0));
+            let midline = r.child(0.49, 0.0, 0.05, 1.0);
+            outputs.canvas.put_rect(midline, 1.2, fg);
+
+            if self.held {
+                self.t = remap(inputs.mouse_pos.y, r.bot(), r.top(), 0.0, 1.0).max(0.0).min(1.0);
+            }
+            
+            // slider
+            {
+                // let r = r.child(1.0 - self.t)
+                let r = Rect::new_centered(r.x + r.w/2.0, r.y + (1.0 - self.t)*r.h, r.w, slider_h);
+                outputs.canvas.put_rect(r, 1.6, fg);
+                let r = r.dilate_pc(-0.05);
+                let s = &format!("{:.3}", self.curr()); // if the rect draws properly (it does ish)
+                outputs.glyphs.pushc(r, s, a, text, 2.0);
+
+            }
+        }
+        
+        // bot
+        {
+            let r = r.child(0.0, top_h + mid_h, 1.0, bot_h);
+            // outputs.canvas.put_rect(r, 5.0, Vec4::new(0.0, 0.0, 1.0, 1.0));
+            let r = r.dilate_pc(-0.05);
+            let s = &format!("{:.3}", self.min);
+            outputs.glyphs.pushl(r, s, a, fg, 2.0);
+        }
 
         if self.held && inputs.lmb == KeyStatus::JustReleased {
             self.held = false;
