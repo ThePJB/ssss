@@ -12,7 +12,7 @@ mod renderers;
 mod scene;
 mod widgets;
 
-mod demos;
+mod game;
 mod root_scene;
 
 use crate::application::*;

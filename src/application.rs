@@ -16,7 +16,7 @@ impl Application {
         let xres = 1600;
         let yres = 1600;
     
-        let video = Video::new("kdemos", xres as f64, yres as f64, event_loop);
+        let video = Video::new("ssss", xres as f64, yres as f64, event_loop);
         
         Application {
             video,
