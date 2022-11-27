@@ -119,6 +119,10 @@ impl SimpleCanvas {
         }
     }
 
+    pub fn put_triangle_struct(&mut self, t: Triangle, depth: f64, colour: Vec4) {
+        self.put_triangle(t.a, t.b, t.c, depth, colour);
+    }
+
     pub fn put_triangle(&mut self, p1: Vec2, p2: Vec2, p3: Vec2, depth: f64, colour: Vec4) {
         self.put_float(p1.x/self.a);
         self.put_float(p1.y);
