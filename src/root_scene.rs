@@ -26,20 +26,20 @@ impl Demo for RootScene {
             self.show_menu = true;
         }
 
-        if inputs.key_rising(VirtualKeyCode::Escape) {
-            self.show_menu = !self.show_menu;
-        }
-        if self.show_menu {
-            let ca = 12.0 / 14.0;
-            let ch = 0.02;
-            let cw = ch * ca;
-            let w = cw * 30.0;
+        // if inputs.key_rising(VirtualKeyCode::Escape) {
+        //     self.show_menu = !self.show_menu;
+        // }
+        // if self.show_menu {
+        //     let ca = 12.0 / 14.0;
+        //     let ch = 0.02;
+        //     let cw = ch * ca;
+        //     let w = cw * 30.0;
 
-            let c = Vec4::grey(0.3);
-            let wcom = 1.0 - w;
-            outputs.canvas.put_rect(inputs.screen_rect.child(wcom/2.0, 0.0, w, 1.0), 4.0, c);
+        //     let c = Vec4::grey(0.3);
+        //     let wcom = 1.0 - w;
+        //     outputs.canvas.put_rect(inputs.screen_rect.child(wcom/2.0, 0.0, w, 1.0), 4.0, c);
 
             // outputs.glyphs.push_center_str(self.demo_table[i].0, x, y_initial + i as f64 * ch, cw, ch * 0.8, 5.5, colour);
-        }
+        // }
     }
 }

@@ -9,6 +9,9 @@ use glutin::event::VirtualKeyCode;
 pub struct Game {
     player_x: f64,
     player_y: f64,
+    player_laser_heat: f64,
+    player_laser_discharge: bool,
+    player_alive: bool,
 
     enemies_pos: Vec<Vec2>,
     enemies_v: Vec<Vec2>,
@@ -18,19 +21,20 @@ pub struct Game {
     bullets_pos: Vec<Vec2>,
 
     t: f64,
-    t_last_spawn: [f64; 3],
+    t_last_spawn: [f64; 4],
     seed: u32,
 
-    alive: bool,
     score: i32,
 }
 
 impl Default for Game {
     fn default() -> Self {
         Game {
-            alive: true,
             player_x: 0.1,
             player_y: 0.5,
+            player_alive: true,
+            player_laser_heat: 0.0,
+            player_laser_discharge: false,
             enemies_pos: Vec::new(),
             enemies_t_last_shoot: Vec::new(),
             enemies_v: Vec::new(),
@@ -38,7 +42,7 @@ impl Default for Game {
             enemies_dob: Vec::new(),
             bullets_pos: Vec::new(),
             t: 0.0,
-            t_last_spawn: [0.0; 3],
+            t_last_spawn: [0.0; 4],
             seed: SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).map(|x| x.as_nanos() as u32).unwrap_or(1),
             score: 0,
         }
@@ -51,8 +55,8 @@ impl Demo for Game {
             *self = Game::default()
         }
 
-        let player_w = 0.08;
-        let player_h = 0.05;
+        let player_w = 0.04;
+        let player_h = 0.025;
         let player_speed = 0.5;
         
         let laser_h = 0.005;
@@ -61,15 +65,15 @@ impl Demo for Game {
         let player_inner_colour = Vec4::new(120.0, 0.5, 1.0, 1.0).hsv_to_rgb();
         let laser_colour = Vec4::new(1.0, 0.0, 0.0, 1.0);
         
-        let enemy_w = [0.04, 0.04, 0.03];
-        let enemy_h = [0.04, 0.04, 0.03];
-        let enemy_shoot_interval = [1.01, 0.36, 0.3];
-        let enemy_spawn_interval = [1.0, 0.2, 0.1];
-        let enemy_spawn_after = [0.0, 10.0, 20.0];
-        let enemy_spawn_duty_cycle = [1.0, 0.3, 0.1];
-        let enemy_spawn_len = [1.0, 3.0, 1.0];
-        let enemy_speed = [0.1, 0.15, 0.2];
-        let enemy_colour = [Vec4::new(0.0, 0.0, 1.0, 1.0), Vec4::new(1.0, 0.0, 0.0, 1.0), Vec4::new(0.0, 1.0, 0.0, 1.0),];
+        let enemy_w = [0.04, 0.04, 0.03, 0.05];
+        let enemy_h = [0.04, 0.04, 0.03, 0.05];
+        let enemy_shoot_interval = [1.01, 0.4, 0.5, f64::INFINITY];
+        let enemy_spawn_interval = [1.0, 0.2, 0.1, 5.0];
+        let enemy_spawn_after = [0.0, 10.0, 20.0, 30.0];
+        let enemy_spawn_duty_cycle = [1.0, 0.21, 0.1, 1.0];
+        let enemy_spawn_len = [1.0, 3.0, 0.6, 0.1];
+        let enemy_speed = [0.15, 0.2, 0.25, 0.4];
+        let enemy_colour = [Vec4::new(0.0, 0.0, 1.0, 1.0), Vec4::new(1.0, 0.0, 0.0, 1.0), Vec4::new(0.0, 1.0, 0.0, 1.0), Vec4::new(0.7, 0.0, 0.7, 1.0)];
 
         let bullet_w = 0.03;
         let bullet_h = 0.01;
@@ -78,7 +82,7 @@ impl Demo for Game {
 
         let mut dt = inputs.dt;
 
-        if self.alive {
+        if self.player_alive {
             self.t += inputs.dt;
         } else {
             dt = 0.0;
@@ -113,26 +117,44 @@ impl Demo for Game {
         let pr = Vec2::new(self.player_x + player_w/2.0, self.player_y);
         let ptri = Triangle::new(ptl, pr, pbl);
         let ptri_inner = ptri.dilate(-0.3);
-        if self.alive {
+        if self.player_alive {
             outputs.canvas.put_triangle_struct(ptri, 1.6, player_border_colour);
             outputs.canvas.put_triangle_struct(ptri_inner, 1.7, player_inner_colour);
         }
 
-        let laser_rect =
-            if inputs.key_held(VirtualKeyCode::Space) {
-                let laser_rect = Rect::new(self.player_x, self.player_y - laser_h/2.0, 100.0, laser_h);
-                outputs.canvas.put_rect(laser_rect, 1.5, laser_colour);
-                Some(laser_rect)
-            } else {
-                None
-            };
+        // Shoot laser?
+        let shoot_laser = inputs.key_held(VirtualKeyCode::Space) && !self.player_laser_discharge && self.player_alive;
+        let laser_rect = if shoot_laser {
+            Some(Rect::new(self.player_x, self.player_y - laser_h/2.0, 100.0, laser_h))
+        } else {
+            None
+        };
+        if let Some(laser_rect) = laser_rect {
+            outputs.canvas.put_rect(laser_rect, 1.5, laser_colour);
+        }
+        if shoot_laser {
+            self.player_laser_heat += dt;
+            if self.player_laser_heat > 1.0 {
+                self.player_laser_heat = 1.0;
+                self.player_laser_discharge = true;
+            }
+        }
+        if !shoot_laser {
+            self.player_laser_heat -= dt;
+            if self.player_laser_heat <= 0.0 {
+                self.player_laser_heat = 0.0;
+                self.player_laser_discharge = false;
+            }
+        }
 
-        for et in 0..3 {
+
+        for et in 0..4 {
             if self.t > enemy_spawn_after[et] && self.t - self.t_last_spawn[et] > enemy_spawn_interval[et] && ((self.t - enemy_spawn_after[et]) % (enemy_spawn_len[et]/enemy_spawn_duty_cycle[et])) < enemy_spawn_len[et] {
 
                 let sp = [
                     Vec2::new(inputs.screen_rect.w + enemy_w[et]/2.0, krand(inputs.seed)),
                     Vec2::new(inputs.screen_rect.w + enemy_w[et]/2.0, 0.5),
+                    Vec2::new(inputs.screen_rect.w + enemy_w[et]/2.0, krand(inputs.seed)),
                     Vec2::new(inputs.screen_rect.w + enemy_w[et]/2.0, krand(inputs.seed)),
                 ];
 
@@ -151,14 +173,16 @@ impl Demo for Game {
                 0.1 * (noise1d(self.t, self.seed + i as u32 * 12312487) - 0.5) * 2.0,
                 -0.3 * (self.t - self.enemies_dob[i]).cos(),
                 0.3 * (noise1d(self.t, self.seed + i as u32 * 12312487) - 0.5) * 2.0,
+                0.3 * (10.0*(self.t - self.enemies_dob[i])).cos(),
             ];
             self.enemies_v[i].y = vy[et];
             self.enemies_pos[i] = self.enemies_pos[i] + dt * self.enemies_v[i];
             let r = self.enemies_pos[i].rect_centered(enemy_w[et], enemy_h[et]);
-            if r.overlaps(player_rect).is_some() {
-                self.alive = false;
-            }
             outputs.canvas.put_rect(r, 1.5, enemy_colour[et]);
+            let r = r.dilate_pc(-0.2);
+            if r.overlaps(player_rect).is_some() {
+                self.player_alive = false;
+            }
         }
 
         if let Some(laser_rect) = laser_rect {
@@ -172,7 +196,7 @@ impl Demo for Game {
                 let et = self.enemies_type[i];
                 let er = self.enemies_pos[i].rect_centered(enemy_w[et], enemy_h[et]);
 
-                if er.overlaps(laser_rect).is_some() {
+                if er.right() < 0.0 || er.overlaps(laser_rect).is_some() {
                     self.enemies_pos.swap_remove(i);
                     self.enemies_t_last_shoot.swap_remove(i);
                     self.enemies_v.swap_remove(i);
@@ -197,25 +221,39 @@ impl Demo for Game {
         }
 
         for bullet_pos in self.bullets_pos.iter() {
-            outputs.canvas.put_rect(bullet_pos.rect_centered(bullet_w, bullet_h), 2.0, bullet_colour);
+            outputs.canvas.put_rect(bullet_pos.rect_centered(bullet_w, bullet_h), 1.8, bullet_colour);
         }
 
         for bullet_pos in self.bullets_pos.iter() {
             if ptri.dilate(bullet_h).contains(*bullet_pos) {
-                self.alive = false;
+                self.player_alive = false;
             }
         }
-
-        if self.alive {
-            outputs.glyphs.push_str(format!("score: {}", self.score).as_str(), 0.02, 0.02, 0.03, 0.03, 2.1, Vec4::new(1.0, 1.0, 1.0, 1.0));
+        
+        outputs.glyphs.push_str(format!("score: {}", self.score).as_str(), 0.02, 0.02, 0.03, 0.03, 2.1, Vec4::new(1.0, 1.0, 1.0, 1.0));
+        if self.player_alive {
+            if self.t < 3.0 {
+                let x = inputs.screen_rect.w/2.0;
+                let mut y = inputs.screen_rect.h * 0.3;
+                outputs.glyphs.push_center_str("wasd - move", x, y, 0.04, 0.04, 2.1, Vec4::new(1.0, 1.0, 1.0, 1.0));
+                let mut y = inputs.screen_rect.h * 0.6;
+                outputs.glyphs.push_center_str("space - shoot", x, y, 0.04, 0.04, 2.1, Vec4::new(1.0, 1.0, 1.0, 1.0));
+                
+            }
         } else {
+            let banner_rect = inputs.screen_rect.child(0.0, 0.33, 1.0, 0.25);
+            outputs.canvas.put_rect(banner_rect, 1.9, Vec4::new(0.0, 0.0, 0.0, 1.0));
+            outputs.canvas.put_rect(banner_rect.dilate_pc(0.01), 1.85, Vec4::new(1.0, 0.0, 0.0, 1.0));
+
             let x = inputs.screen_rect.w/2.0;
-            let mut y = inputs.screen_rect.h * 0.3;
+            let mut y = inputs.screen_rect.h * 0.37;
             outputs.glyphs.push_center_str("you died", x, y, 0.08, 0.08, 2.1, Vec4::new(1.0, 0.0, 0.0, 1.0));
             y += 0.1;
-            outputs.glyphs.push_center_str(format!("score: {}", self.score).as_str(), x, y, 0.04, 0.08, 2.1, Vec4::new(1.0, 1.0, 0.0, 1.0));
-            y += 0.1;
-            outputs.glyphs.push_center_str("press r to play again", x, y, 0.04, 0.04, 2.1, Vec4::new(1.0, 1.0, 1.0, 1.0));
+            outputs.glyphs.push_center_str(format!("score: {}", self.score).as_str(), x, y, 0.08, 0.08, 2.1, Vec4::new(1.0, 1.0, 0.0, 1.0));
+            y = 0.66;
+            if inputs.t % 2.0 > 1.0 {
+                outputs.glyphs.push_center_str("press r to play again", x, y, 0.04, 0.04, 2.1, Vec4::new(1.0, 1.0, 1.0, 1.0));
+            }
         }
 
         self.bullets_pos.retain(|x| !ptri.dilate(bullet_h).contains(*x) && x.x > -1.0);
@@ -224,6 +262,8 @@ impl Demo for Game {
         // let tb = background(self.t, self.seed, 400, 400);
         outputs.set_texture.push((tb, 0));
         outputs.draw_texture.push((inputs.screen_rect, 0));
+
+        
 
         // pixel background mountains
             
@@ -249,9 +289,9 @@ fn background(t: f64, seed: u32, w: usize, h: usize) -> TextureBuffer {
         let mg_t = 1.0 * t + px_t * i as f64;
         let fg_t = 4.0 * t + px_t * i as f64;
 
-        let mtn_bg = f1d(bg_t, seed);
-        let mtn_mg = f1d(mg_t, seed * 1241247);
-        let mtn_fg = f1d(fg_t, seed * 123351561);
+        let mtn_bg = -f1d(bg_t, seed).ln();
+        let mtn_mg = -f1d(mg_t, seed * 1241247).ln();
+        let mtn_fg = -f1d(fg_t, seed * 123351561).ln();
 
         let mtn_fg = mtn_fg/4.0 - 0.15;
         let mtn_mg = mtn_mg/4.0;
