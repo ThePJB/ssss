@@ -12,7 +12,7 @@ pub struct MeshBuilder {
 }
 
 impl MeshBuilder {
-    fn put_float(&mut self, x: f64) {
+    fn put_float(&mut self, x: f32) {
         for b in (x as f32).to_le_bytes() {
             self.elements.push(b);
         }

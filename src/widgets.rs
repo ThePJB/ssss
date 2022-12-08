@@ -3,15 +3,15 @@ use crate::scene::*;
 use crate::kinput::*;
 
 pub struct FloatSlider {
-    pub t: f64, // 1.0 top 0.0 bot
-    pub min: f64,
-    pub max: f64,
+    pub t: f32, // 1.0 top 0.0 bot
+    pub min: f32,
+    pub max: f32,
     pub held: bool,
     pub label: String,
 }
 
 impl FloatSlider {
-    pub fn new(default: f64, min: f64, max: f64, label: String) -> FloatSlider {
+    pub fn new(default: f32, min: f32, max: f32, label: String) -> FloatSlider {
         FloatSlider {
             t: (default - min) / (max - min),
             min, 
@@ -21,11 +21,11 @@ impl FloatSlider {
         }
     }
 
-    pub fn set_val(&mut self, val: f64) {
+    pub fn set_val(&mut self, val: f32) {
         self.t = (val - self.min) / (self.max - self.min);
     }
 
-    pub fn curr(&self) -> f64 {
+    pub fn curr(&self) -> f32 {
         lerp(self.min, self.max, self.t)
     }
 

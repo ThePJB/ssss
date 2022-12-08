@@ -126,25 +126,25 @@ impl CTRenderer {
 }
 
 pub struct CTCanvas {
-    a: f64,
+    a: f32,
     buf: Vec<u8>,
 }
 
 impl CTCanvas {
-    pub fn new(a: f64) -> CTCanvas {
+    pub fn new(a: f32) -> CTCanvas {
         CTCanvas {
             a,
             buf: Vec::new(),
         }
     }
 
-    fn put_float(&mut self, x: f64) {
+    fn put_float(&mut self, x: f32) {
         for b in (x as f32).to_le_bytes() {
             self.buf.push(b);
         }
     }
 
-    pub fn put_triangle(&mut self, p1: Vec2, uv1: Vec2, p2: Vec2, uv2: Vec2, p3: Vec2, uv3: Vec2, depth: f64, colour: Vec4) {
+    pub fn put_triangle(&mut self, p1: Vec2, uv1: Vec2, p2: Vec2, uv2: Vec2, p3: Vec2, uv3: Vec2, depth: f32, colour: Vec4) {
         self.put_float(p1.x/self.a);
         self.put_float(p1.y);
         self.put_float(depth);
@@ -176,7 +176,7 @@ impl CTCanvas {
         self.put_float(uv3.y);
     }
 
-    pub fn put_rect(&mut self, r: Rect, r_uv: Rect, depth: f64, colour: Vec4) {
+    pub fn put_rect(&mut self, r: Rect, r_uv: Rect, depth: f32, colour: Vec4) {
         self.put_triangle(r.tl(), r_uv.tl(), r.tr(), r_uv.tr(), r.bl(), r_uv.bl(), depth, colour);
         self.put_triangle(r.bl(), r_uv.bl(), r.tr(), r_uv.tr(), r.br(), r_uv.br(), depth, colour);
     }

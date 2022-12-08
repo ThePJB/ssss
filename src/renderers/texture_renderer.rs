@@ -112,7 +112,7 @@ impl TextureRenderer {
             }
         }
         
-        pub fn render(&self, gl: &glow::Context, rect: Rect, a: f64, texture: usize) {
+        pub fn render(&self, gl: &glow::Context, rect: Rect, a: f32, texture: usize) {
             unsafe {
             gl.bind_texture(glow::TEXTURE_2D, Some(self.textures[texture]));
             gl.use_program(Some(self.program));

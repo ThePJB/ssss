@@ -35,9 +35,9 @@ pub struct FrameInputState {
     pub lmb: KeyStatus,
     pub rmb: KeyStatus,
     pub mmb: KeyStatus,
-    pub scroll_delta: f64,
-    pub t: f64,
-    pub dt: f64,
+    pub scroll_delta: f32,
+    pub t: f32,
+    pub dt: f32,
     pub frame: u32,
     pub seed: u32,
 }
@@ -66,15 +66,15 @@ impl FrameInputState {
 // Its basically just a state machine to go from events to polling behaviour
 
 pub struct EventAggregator {
-    xres: f64,
-    yres: f64,
+    xres: f32,
+    yres: f32,
     t_last: Instant,
     instant_mouse_pos: Vec2,
     current: FrameInputState,
 }
 
 impl EventAggregator {
-    pub fn new(xres: f64, yres: f64) -> EventAggregator {
+    pub fn new(xres: f32, yres: f32) -> EventAggregator {
         EventAggregator { 
             xres, 
             yres, 
@@ -145,10 +145,10 @@ impl EventAggregator {
                 glutin::event::WindowEvent::MouseWheel { delta, ..} => {
                     match delta {
                         glutin::event::MouseScrollDelta::LineDelta(_, y) => {
-                            self.current.scroll_delta = *y as f64;
+                            self.current.scroll_delta = *y as f32;
                         },
                         glutin::event::MouseScrollDelta::PixelDelta(p) => {
-                            self.current.scroll_delta = p.y;
+                            self.current.scroll_delta = p.y as f32;
                         },
                     }
                 },
@@ -159,13 +159,13 @@ impl EventAggregator {
                     position: pos,
                     ..
                 } => {
-                    self.instant_mouse_pos = Vec2::new(pos.x as f64 / self.yres, pos.y as f64 / self.yres);
+                    self.instant_mouse_pos = Vec2::new(pos.x as f32 / self.yres, pos.y as f32 / self.yres);
                 },
 
                 // Resize
                 Resized(physical_size) => {
-                    self.xres = physical_size.width as f64;
-                    self.yres = physical_size.height as f64;
+                    self.xres = physical_size.width as f32;
+                    self.yres = physical_size.height as f32;
                     self.current.screen_rect = Rect::new(0.0, 0.0, self.xres / self.yres, 1.0);
                 },
 
@@ -176,7 +176,7 @@ impl EventAggregator {
             },
             Event::MainEventsCleared => {
                 let t_now = Instant::now();
-                let dt = t_now.duration_since(self.t_last).as_secs_f64();
+                let dt = t_now.duration_since(self.t_last).as_secs_f32();
                 self.current.dt = dt;
                 self.current.t += dt;
                 self.t_last = t_now;

@@ -1,12 +1,11 @@
 #![feature(drain_filter)]
 
 mod application;
-mod video;
+
 mod kmath;
 mod priority_queue;
 mod kimg;
 mod kinput;
-mod texture_buffer;
 
 mod renderers;
 mod scene;
@@ -14,6 +13,12 @@ mod widgets;
 
 mod game;
 mod root_scene;
+
+mod audio;
+mod sound_instance;
+
+mod video;
+mod texture_buffer;
 
 use crate::application::*;
 

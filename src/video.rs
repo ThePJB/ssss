@@ -10,8 +10,8 @@ use crate::scene::*;
 pub struct Video {
     pub gl: glow::Context,
     pub window: glutin::WindowedContext<glutin::PossiblyCurrent>,
-    pub xres: f64,
-    pub yres: f64,
+    pub xres: f32,
+    pub yres: f32,
 
     pub simple_renderer: SimpleRenderer,
     pub texture_renderer: TextureRenderer,
@@ -20,7 +20,7 @@ pub struct Video {
 }
 
 impl Video {
-    pub fn new(title: &str, xres: f64, yres: f64, event_loop: &glutin::event_loop::EventLoop<()>) -> Video {
+    pub fn new(title: &str, xres: f32, yres: f32, event_loop: &glutin::event_loop::EventLoop<()>) -> Video {
         let window_builder = glutin::window::WindowBuilder::new()
             .with_title(title)
             .with_inner_size(glutin::dpi::PhysicalSize::new(xres, yres));
@@ -66,7 +66,7 @@ impl Video {
         }
     }
 
-    pub fn render(&mut self, outputs: &FrameOutputs, a: f64) {
+    pub fn render(&mut self, outputs: &FrameOutputs, a: f32) {
         unsafe {
             if let Some(mb) = &outputs.set_mesh {
                 self.mesh_renderer.update_mesh(&self.gl, mb)

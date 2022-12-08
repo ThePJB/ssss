@@ -4,6 +4,7 @@ use crate::renderers::simple_renderer::*;
 use crate::kinput::*;
 use crate::texture_buffer::*;
 use crate::kmath::*;
+use crate::audio::*;
 
 pub fn init_demo<T: Demo + Default + 'static>() -> Box<dyn Demo> {
     Box::new(T::default())
@@ -18,15 +19,18 @@ pub struct FrameOutputs {
     pub set_mesh: Option<MeshBuilder>,
     pub set_mesh_texture: Option<TextureBuffer>,
     pub draw_mesh: Option<([f32;16], [f32;16], Vec3, Vec3)>,
+
+    pub audio_events: Vec<u32>,
 }
 
 impl FrameOutputs {
-    pub fn new(a: f64) -> FrameOutputs {
+    pub fn new(a: f32) -> FrameOutputs {
         FrameOutputs {
             glyphs: GlyphBuffer::new(),
             canvas: SimpleCanvas::new(a),
             set_texture: Vec::new(),
             draw_texture: Vec::new(),
+            audio_events: Vec::new(),
             set_mesh: None,
             set_mesh_texture: None,
             draw_mesh: None,

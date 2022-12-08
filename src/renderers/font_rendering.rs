@@ -1,7 +1,7 @@
 use crate::kmath::*;
 use crate::renderers::ct_renderer::*;
 
-pub fn glyph_buffer_to_canvas(buf: &GlyphBuffer, a: f64) -> CTCanvas {
+pub fn glyph_buffer_to_canvas(buf: &GlyphBuffer, a: f32) -> CTCanvas {
     let clip_fn = |mut c: u8| {
         if c >= 'a' as u8 && c <= 'z' as u8 {
             c -= 'a' as u8 - 'A' as u8;
@@ -36,7 +36,7 @@ pub fn glyph_buffer_to_canvas(buf: &GlyphBuffer, a: f64) -> CTCanvas {
 }
 
 pub struct GlyphBuffer {
-    pub buf: Vec<(char, Rect, f64, Vec4)>,
+    pub buf: Vec<(char, Rect, f32, Vec4)>,
 }
 
 impl GlyphBuffer {
@@ -44,19 +44,19 @@ impl GlyphBuffer {
         GlyphBuffer { buf: Vec::new() }
     }
 
-    pub fn push_glyph(&mut self, c: char, r: Rect, d: f64, colour: Vec4) {
+    pub fn push_glyph(&mut self, c: char, r: Rect, d: f32, colour: Vec4) {
         self.buf.push((c, r, d, colour));
     }
 
-    pub fn push_str(&mut self, s: &str, mut x: f64, y: f64, w: f64, h: f64, d: f64, colour: Vec4) {
+    pub fn push_str(&mut self, s: &str, mut x: f32, y: f32, w: f32, h: f32, d: f32, colour: Vec4) {
         for c in s.chars() {
             self.push_glyph(c, Rect::new(x, y, w, h), d, colour);
             x += w;
         }
     }
 
-    pub fn push_center_str(&mut self, s: &str, mut x: f64, y: f64, w: f64, h: f64, d: f64, colour: Vec4) {
-        let max_w = s.len() as f64 * w;
+    pub fn push_center_str(&mut self, s: &str, mut x: f32, y: f32, w: f32, h: f32, d: f32, colour: Vec4) {
+        let max_w = s.len() as f32 * w;
         x = x - max_w / 2.0;
         for c in s.chars() {
             self.push_glyph(c, Rect::new(x, y, w, h), d, colour);
@@ -65,7 +65,7 @@ impl GlyphBuffer {
     }
 
     // takes a rect: height of rect is char height, and char a
-    pub fn pushl(&mut self, r: Rect, s: &str, a: f64, c: Vec4, d: f64) {
+    pub fn pushl(&mut self, r: Rect, s: &str, a: f32, c: Vec4, d: f32) {
         let mut x = r.x;
 
         let w = r.h * a;
@@ -75,9 +75,9 @@ impl GlyphBuffer {
         }
     }
 
-    pub fn pushc(&mut self, mut r: Rect, s: &str, a: f64, c: Vec4, d: f64) {
+    pub fn pushc(&mut self, mut r: Rect, s: &str, a: f32, c: Vec4, d: f32) {
         let w = r.h * a;
-        r.x -= (w * s.len() as f64)/2.0;
+        r.x -= (w * s.len() as f32)/2.0;
         r.x += r.w / 2.0;
         self.pushl(r, s, a, c, d);
     }

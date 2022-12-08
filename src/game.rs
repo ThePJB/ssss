@@ -4,24 +4,26 @@ use crate::scene::*;
 use crate::kinput::*;
 use crate::kmath::*;
 use crate::texture_buffer::*;
+use crate::audio::*;
+use crate::sound_instance::*;
 use glutin::event::VirtualKeyCode;
 
 pub struct Game {
-    player_x: f64,
-    player_y: f64,
-    player_laser_heat: f64,
+    player_x: f32,
+    player_y: f32,
+    player_laser_heat: f32,
     player_laser_discharge: bool,
     player_alive: bool,
 
     enemies_pos: Vec<Vec2>,
     enemies_v: Vec<Vec2>,
-    enemies_t_last_shoot: Vec<f64>,
+    enemies_t_last_shoot: Vec<f32>,
     enemies_type: Vec<usize>,
-    enemies_dob: Vec<f64>,
+    enemies_dob: Vec<f32>,
     bullets_pos: Vec<Vec2>,
 
-    t: f64,
-    t_last_spawn: [f64; 4],
+    t: f32,
+    t_last_spawn: [f32; 4],
     seed: u32,
 
     score: i32,
@@ -52,7 +54,11 @@ impl Default for Game {
 impl Demo for Game {
     fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {
         if inputs.key_rising(VirtualKeyCode::R) {
-            *self = Game::default()
+            *self = Game::default();
+            outputs.audio_events.push(LASER);
+            outputs.audio_events.push(ENEMY_DIE);
+            outputs.audio_events.push(ENEMY_SHOOT);
+            outputs.audio_events.push(PLAYER_DIE);
         }
 
         let player_w = 0.04;
@@ -67,7 +73,7 @@ impl Demo for Game {
         
         let enemy_w = [0.04, 0.04, 0.03, 0.05];
         let enemy_h = [0.04, 0.04, 0.03, 0.05];
-        let enemy_shoot_interval = [1.01, 0.4, 0.5, f64::INFINITY];
+        let enemy_shoot_interval = [1.01, 0.4, 0.5, f32::INFINITY];
         let enemy_spawn_interval = [1.0, 0.2, 0.1, 5.0];
         let enemy_spawn_after = [0.0, 10.0, 20.0, 30.0];
         let enemy_spawn_duty_cycle = [1.0, 0.21, 0.1, 1.0];
@@ -133,13 +139,16 @@ impl Demo for Game {
             outputs.canvas.put_rect(laser_rect, 1.5, laser_colour);
         }
         if shoot_laser {
+            outputs.audio_events.push(SOUND_PLAY | LASER | SOUND_UNIQUE);
             self.player_laser_heat += dt;
             if self.player_laser_heat > 1.0 {
                 self.player_laser_heat = 1.0;
                 self.player_laser_discharge = true;
+                outputs.audio_events.push(LASER_POP | SOUND_PLAY);
             }
         }
         if !shoot_laser {
+            outputs.audio_events.push(LASER);
             self.player_laser_heat -= dt;
             if self.player_laser_heat <= 0.0 {
                 self.player_laser_heat = 0.0;
@@ -164,6 +173,7 @@ impl Demo for Game {
                 self.enemies_type.push(et);
                 self.enemies_dob.push(self.t);
                 self.t_last_spawn[et] = self.t;
+                outputs.audio_events.push(SOUND_PLAY | ENEMY_SPAWN);
             }
         }
 
@@ -180,8 +190,9 @@ impl Demo for Game {
             let r = self.enemies_pos[i].rect_centered(enemy_w[et], enemy_h[et]);
             outputs.canvas.put_rect(r, 1.5, enemy_colour[et]);
             let r = r.dilate_pc(-0.2);
-            if r.overlaps(player_rect).is_some() {
+            if r.overlaps(player_rect).is_some() && self.player_alive {
                 self.player_alive = false;
+                outputs.audio_events.push(SOUND_PLAY | PLAYER_DIE);
             }
         }
 
@@ -203,6 +214,7 @@ impl Demo for Game {
                     self.enemies_dob.swap_remove(i);
                     self.enemies_type.swap_remove(i);
                     self.score += 1;
+                outputs.audio_events.push(SOUND_PLAY | ENEMY_DIE);
                 }
             }
         }
@@ -213,6 +225,7 @@ impl Demo for Game {
             if self.t - self.enemies_t_last_shoot[i] > enemy_shoot_interval[et] {
                 self.bullets_pos.push(self.enemies_pos[i]);
                 self.enemies_t_last_shoot[i] = self.t;
+                outputs.audio_events.push(SOUND_PLAY | ENEMY_SHOOT);
             }
         }
 
@@ -227,11 +240,13 @@ impl Demo for Game {
         for bullet_pos in self.bullets_pos.iter() {
             if ptri.dilate(bullet_h).contains(*bullet_pos) {
                 self.player_alive = false;
+                outputs.audio_events.push(SOUND_PLAY | PLAYER_DIE);
             }
         }
         
         outputs.glyphs.push_str(format!("score: {}", self.score).as_str(), 0.02, 0.02, 0.03, 0.03, 2.1, Vec4::new(1.0, 1.0, 1.0, 1.0));
         if self.player_alive {
+
             if self.t < 3.0 {
                 let x = inputs.screen_rect.w/2.0;
                 let mut y = inputs.screen_rect.h * 0.3;
@@ -270,7 +285,7 @@ impl Demo for Game {
     }
 }
 
-fn background(t: f64, seed: u32, w: usize, h: usize) -> TextureBuffer {
+fn background(t: f32, seed: u32, w: usize, h: usize) -> TextureBuffer {
 
     let mut tb = TextureBuffer::new(w, h);
 
@@ -285,9 +300,9 @@ fn background(t: f64, seed: u32, w: usize, h: usize) -> TextureBuffer {
 
     for i in 0..w {
         // 1d fractal noise for mountains
-        let bg_t = 0.5 * t + px_t * i as f64;
-        let mg_t = 1.0 * t + px_t * i as f64;
-        let fg_t = 4.0 * t + px_t * i as f64;
+        let bg_t = 0.5 * t + px_t * i as f32;
+        let mg_t = 1.0 * t + px_t * i as f32;
+        let fg_t = 4.0 * t + px_t * i as f32;
 
         let mtn_bg = -f1d(bg_t, seed).ln();
         let mtn_mg = -f1d(mg_t, seed * 1241247).ln();
@@ -298,7 +313,7 @@ fn background(t: f64, seed: u32, w: usize, h: usize) -> TextureBuffer {
         let mtn_bg = mtn_bg/4.0 + 0.15;
         
         for j in 0..h {
-            let vertical_pos = j as f64 / h as f64;
+            let vertical_pos = j as f32 / h as f32;
             
             let c = if vertical_pos < mtn_fg {
                 cmtn_fg
@@ -308,7 +323,7 @@ fn background(t: f64, seed: u32, w: usize, h: usize) -> TextureBuffer {
                 cmtn_bg
             } else {
                 let cloudness_vert = (vertical_pos-0.5).max(0.0);
-                let cloudness_noise = cloud_noise(i as f64 + t * 10.0, j as f64, seed * 15417);
+                let cloudness_noise = cloud_noise(i as f32 + t * 10.0, j as f32, seed * 15417);
                 sky.lerp(Vec4::new(1.0, 1.0, 1.0, 1.0), cloudness_vert * cloudness_noise)
             };
 
@@ -319,7 +334,7 @@ fn background(t: f64, seed: u32, w: usize, h: usize) -> TextureBuffer {
     tb
 }
 
-fn f1d(t: f64, seed: u32) -> f64 {
+fn f1d(t: f32, seed: u32) -> f32 {
     1.000 * noise1d(t, seed) + 
     0.500 * noise1d(t, seed * 14147) + 
     0.250 * noise1d(t, seed * 141879177) + 
@@ -327,7 +342,7 @@ fn f1d(t: f64, seed: u32) -> f64 {
     1.5875
 }
 
-fn cloud_noise(x: f64, y: f64, seed: u32) -> f64 {
+fn cloud_noise(x: f32, y: f32, seed: u32) -> f32 {
     let n1 = noise2d(x/100.0, y/10.0, seed);
     // let n2 = noise2d(x/5.0, y/5.0, seed * 154171234);
     // n1 * n2
