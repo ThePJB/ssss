@@ -1,6 +1,11 @@
 use crate::kmath::*;
 
+// audio system has to be another system
+// be nice to do procedural audio easily, that would be a lot of function composition
+
 // can add fstart fend reps
+// its a bit of a matrix
+// vol in db maybe?
 
 pub const LASER: u32 = 0;
 pub const ENEMY_SHOOT: u32 = 1;
@@ -12,8 +17,9 @@ pub const POWERUP: u32 = 6;
 
 const PHASE_UNIT: f32 = 2.0 * PI / 44100.0; // phase unit
                                 //   laser      eshoot  pdie    edie    espawn  lpop  pwrup
-const duration: [u64; 9] =          [u64::MAX,  2500,   15000,  10000,  2500,  5000,  40000, 100, 100];
-const freq_base: [f32; 9] =         [110.0,     150.0,  110.0,  880.0,  200.0,  666.0,  60.0, 100.0, 100.0];
+const duration: [u64; 9] =          [u64::MAX,  2500,   15000,  10000,  2500,  5000,  30000, 100, 100];
+const freq_base: [f32; 9] =         [110.0,     150.0,  110.0,  880.0,  200.0,  666.0,  110.0, 100.0, 100.0];
+const freq_mult_end: [f32; 9] =     [1.0,       0.5,    1.0,    1.0,    0.5,    1.0,    0.0, 1.0, 1.0];
 const freq_mult_range: [f32; 9] =   [0.0,       2.0,    0.0,    0.0,    0.0,    0.0,    0.0, 0.0, 0.0];
 const amp: [f32; 9] =               [0.1,       0.05,    0.6,    0.03,   0.0,    0.1,    0.1, 0.1, 0.1, ];
 const amp_start: [f32; 9] =         [1.0,       1.0,    1.0,    1.0,    0.0,    1.0,    1.0, 1.0, 1.0, ];
@@ -24,6 +30,7 @@ pub struct SoundInstance {
     pub age: u64,
     pub id: u32,
     pub seed: u32,
+    pub phase: f32,
 }
 
 impl SoundInstance {
@@ -32,12 +39,15 @@ impl SoundInstance {
     }
 
     pub fn freq(&self) -> f32 {
-        freq_base[self.id as usize] * (1.0 + krand(self.seed) * freq_mult_range[self.id as usize])
+        let t = self.age as f32 / duration[self.id as usize] as f32;
+        let f = lerp(freq_base[self.id as usize], freq_base[self.id as usize]*freq_mult_end[self.id as usize], t);
+        f * (1.0 + krand(self.seed) * freq_mult_range[self.id as usize])
     }
 
     pub fn tick(&mut self) -> f32 {
         self.age += 1;
-        let a = amp[self.id as usize] * (self.age as f32 * PHASE_UNIT * self.freq()).sin() * self.sin_window(100);
+        self.phase = (self.phase + (PHASE_UNIT * self.freq())) % TAU;
+        let a = amp[self.id as usize] * self.phase.sin() * self.sin_window(100);
         let t = self.age as f32 / self.duration() as f32;
         lerp(amp_start[self.id as usize], amp_end[self.id as usize], t) * a
     }
@@ -86,6 +96,7 @@ impl SoundManager {
         self.seed = khash(self.seed.wrapping_mul(1241417).wrapping_add(124114));
         self.sounds.push(SoundInstance {
             age: 0,
+            phase: 0.0,
             birth: self.age,
             id,
             seed: self.seed,
