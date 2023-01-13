@@ -21,6 +21,11 @@ pub struct Game {
     enemies_type: Vec<usize>,
     enemies_dob: Vec<f32>,
     bullets_pos: Vec<Vec2>,
+    
+    powerup_t_last: f32,
+    powerup_collect_t_last: f32,
+    powerup_pos: Option<Vec2>,
+    powerup_number: u32,
 
     t: f32,
     t_last_spawn: [f32; 4],
@@ -43,6 +48,10 @@ impl Default for Game {
             enemies_type: Vec::new(),
             enemies_dob: Vec::new(),
             bullets_pos: Vec::new(),
+            powerup_pos: None,
+            powerup_t_last: 0.0,
+            powerup_collect_t_last: -10.0,
+            powerup_number: 0,
             t: 0.0,
             t_last_spawn: [0.0; 4],
             seed: SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).map(|x| x.as_nanos() as u32).unwrap_or(1),
@@ -52,7 +61,7 @@ impl Default for Game {
 }
 
 impl Demo for Game {
-    fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs) {
+    fn frame(&mut self, inputs: &FrameInputs, outputs: &mut FrameOutputs) {
         if inputs.key_rising(VirtualKeyCode::R) {
             *self = Game::default();
             outputs.audio_events.push(LASER);
@@ -67,33 +76,40 @@ impl Demo for Game {
         
         let laser_h = 0.005;
         
-        let player_border_colour = Vec4::new(0.0, 0.0, 0.0, 1.0);
-        let player_inner_colour = Vec4::new(120.0, 0.5, 1.0, 1.0).hsv_to_rgb();
-        let laser_colour = Vec4::new(1.0, 0.0, 0.0, 1.0);
+        let player_border_colour = v4(0.0, 0.0, 0.0, 1.0);
+        let player_inner_colour = v4(120.0, 0.5, 1.0, 1.0).hsv_to_rgb();
+        let laser_colour = v4(1.0, 0.0, 0.0, 1.0);
         
-        let enemy_w = [0.04, 0.04, 0.03, 0.05];
-        let enemy_h = [0.04, 0.04, 0.03, 0.05];
-        let enemy_shoot_interval = [1.01, 0.4, 0.5, f32::INFINITY];
+        let enemy_w = [0.05, 0.04, 0.03, 0.05];
+        let enemy_h = [0.05, 0.04, 0.03, 0.05];
+        let enemy_shoot_interval = [1.41, 0.8, 0.7, f32::INFINITY];
         let enemy_spawn_interval = [1.0, 0.2, 0.1, 5.0];
         let enemy_spawn_after = [0.0, 10.0, 20.0, 30.0];
         let enemy_spawn_duty_cycle = [1.0, 0.21, 0.1, 1.0];
         let enemy_spawn_len = [1.0, 3.0, 0.6, 0.1];
-        let enemy_speed = [0.15, 0.2, 0.25, 0.4];
-        let enemy_colour = [Vec4::new(0.0, 0.0, 1.0, 1.0), Vec4::new(1.0, 0.0, 0.0, 1.0), Vec4::new(0.0, 1.0, 0.0, 1.0), Vec4::new(0.7, 0.0, 0.7, 1.0)];
+        let enemy_speed = [0.1, 0.2, 0.25, 0.4];
+        let enemy_colour = [v4(0.0, 0.0, 1.0, 1.0), v4(1.0, 0.0, 0.0, 1.0), v4(0.0, 0.9, 0.0, 1.0), v4(0.7, 0.0, 0.7, 1.0)];
+
+        let powerup_speed = 0.4;    // or as a drop from the purple guys
+                                    // or a powerup laser that kill bullets too
+                                    // or kill all bullets powerup, this is powerup to kill all enemies
 
         let bullet_w = 0.03;
         let bullet_h = 0.01;
         let bullet_colour = Vec4::new(1.0, 1.0, 0.0, 1.0);
-        let bullet_speed = 0.3;
+        let bullet_speed = 0.6;
 
         let mut dt = inputs.dt;
 
+
+        /////////////////////////////////////////////
+        // Player
+        /////////////////////////////////////////////
         if self.player_alive {
             self.t += inputs.dt;
         } else {
             dt = 0.0;
         }
-
 
         let steer_y = if inputs.key_held(VirtualKeyCode::W) {
             -1.0
@@ -128,7 +144,10 @@ impl Demo for Game {
             outputs.canvas.put_triangle_struct(ptri_inner, 1.7, player_inner_colour);
         }
 
-        // Shoot laser?
+
+        ///////////////////////////////////
+        // Laser
+        ///////////////////////////////////
         let shoot_laser = inputs.key_held(VirtualKeyCode::Space) && !self.player_laser_discharge && self.player_alive;
         let laser_rect = if shoot_laser {
             Some(Rect::new(self.player_x, self.player_y - laser_h/2.0, 100.0, laser_h))
@@ -157,6 +176,57 @@ impl Demo for Game {
         }
 
 
+        /////////////////////////////////////////
+        // Powerups
+        /////////////////////////////////////////
+        if self.t - self.powerup_t_last > kuniform(1241235417 * self.powerup_number + 1234125417, 10.0, 20.0) && self.powerup_pos.is_none() {
+            let y = kuniform(1361723497 * self.powerup_number + 9323717, 0.0, 1.0);
+            let x = inputs.screen_rect.w + 0.05;
+            self.powerup_pos = Some(Vec2::new(x, y));
+            self.powerup_number += 1;
+            self.powerup_t_last = self.t;
+        }
+
+        let mut pp_off = false;
+        let mut pp_collected = false;
+        if let Some(ppos) = self.powerup_pos.as_mut() {
+            ppos.x -= powerup_speed * dt;
+            if ppos.x < -0.1 {
+                pp_off = true;
+            }
+            let r = 0.03;
+            let pp_rect = Rect::new_centered(ppos.x, ppos.y, r, r);
+            if pp_rect.overlaps(player_rect).is_some() {
+                pp_off = true;
+                pp_collected = true;
+                self.powerup_collect_t_last = self.t;
+                outputs.audio_events.push(SOUND_PLAY | POWERUP);
+            }
+            outputs.canvas.put_triangle(
+                r * Vec2::new((inputs.t * TAU/3.0).sin(), (inputs.t * TAU/3.0).cos()) + *ppos, 
+                r * Vec2::new((inputs.t * TAU/3.0 + TAU/3.0).sin(), (inputs.t * TAU/3.0  + TAU/3.0).cos()) + *ppos, 
+                r * Vec2::new((inputs.t * TAU/3.0 + 2.0 * TAU/3.0).sin(), (inputs.t * TAU/3.0  + 2.0 * TAU/3.0).cos()) + *ppos, 
+            3.0, Vec4::new(0.0, 1.0, 1.0, 1.0));
+            outputs.canvas.put_triangle(
+                r * Vec2::new((-inputs.t * TAU/3.0).sin(), (-inputs.t * TAU/3.0).cos()) + *ppos, 
+                r * Vec2::new((-inputs.t * TAU/3.0 + TAU/3.0).sin(), (-inputs.t * TAU/3.0  + TAU/3.0).cos()) + *ppos, 
+                r * Vec2::new((-inputs.t * TAU/3.0 + 2.0 * TAU/3.0).sin(), (-inputs.t * TAU/3.0  + 2.0 * TAU/3.0).cos()) + *ppos, 
+            2.9, Vec4::new(1.0, 1.0, 1.0, 1.0));
+        }
+
+        if pp_off {
+            self.powerup_pos = None;
+        }
+
+        if self.t - self.powerup_collect_t_last < 0.0707 {
+            outputs.canvas.put_rect(inputs.screen_rect, 1.4, v4(1., 1., 1., 1.));
+        }
+        
+
+
+        ////////////////////////////////////////////
+        // Enemy Spawning
+        ////////////////////////////////////////////
         for et in 0..4 {
             if self.t > enemy_spawn_after[et] && self.t - self.t_last_spawn[et] > enemy_spawn_interval[et] && ((self.t - enemy_spawn_after[et]) % (enemy_spawn_len[et]/enemy_spawn_duty_cycle[et])) < enemy_spawn_len[et] {
 
@@ -177,6 +247,10 @@ impl Demo for Game {
             }
         }
 
+
+        /////////////////////////////////////////////////
+        // Enemy Movement
+        /////////////////////////////////////////////////
         for i in 0..self.enemies_v.len() {
             let et = self.enemies_type[i];
             let vy = [
@@ -187,8 +261,43 @@ impl Demo for Game {
             ];
             self.enemies_v[i].y = vy[et];
             self.enemies_pos[i] = self.enemies_pos[i] + dt * self.enemies_v[i];
-            let r = self.enemies_pos[i].rect_centered(enemy_w[et], enemy_h[et]);
-            outputs.canvas.put_rect(r, 1.5, enemy_colour[et]);
+            let p = self.enemies_pos[i];
+            let r = p.rect_centered(enemy_w[et], enemy_h[et]);
+            let c = enemy_colour[et];
+
+            match et {
+                0 => {
+                    let rh = 0.02;
+                    outputs.canvas.put_rect(p.rect_centered(0.05, rh), 1.5, c);
+                    outputs.canvas.put_circle(p + v2(0.0, -rh/2.0), 0.025, 1.5,  c);
+                    outputs.canvas.put_circle(p + v2(-0.05/4.0, rh/2.0), 0.025/2.0, 1.5,  c);
+                    outputs.canvas.put_circle(p + v2(0.05/4.0, rh/2.0), 0.025/2.0, 1.5,  c);
+                    outputs.canvas.put_circle(p + v2(0., -0.01), 0.025/2.5, 1.51,  v4(0.5, 0.8, 1., 1.));
+                },
+                1 => {
+                    let rh = 0.02;
+                    let rw = 0.02;
+                    outputs.canvas.put_triangle(p + v2(0., -rh), p + v2(rw, -rh), p + v2(rw, rh), 1.5, v4(1., 1., 0., 1.));
+                    outputs.canvas.put_triangle(p + v2(0., rh), p + v2(rw, -rh), p + v2(rw, rh), 1.5, v4(1., 1., 0., 1.));
+                    outputs.canvas.put_triangle(p + v2(-rw, 0.0), p + v2(rw, -rh), p + v2(rw, rh), 1.5, v4(1., 0., 0., 1.));
+                },
+                2 => {
+                    outputs.canvas.put_vpill(p, 0.03, 0.01, 1.5, c);
+                    outputs.canvas.put_vpill(p, 0.02, 0.08, 1.5, c);
+                    outputs.canvas.put_circle(p, 0.007, 1.51, v4(0.3, 0.3, 0.3, 1.0));
+                },
+                3 => {
+                    let r = 0.03;
+                    let phase = 2.0 * self.t;
+                    outputs.canvas.put_circle(p, r, 1.5, c);
+                    outputs.canvas.put_circle(p + 3.*r/2. * v2(phase.sin(), phase.cos()), r/2., 1.5, c);
+                    outputs.canvas.put_circle(p + 3.*r/2. * v2((phase + TAU/4.0).sin(), (phase + TAU/4.0).cos()), r/2., 1.5, c);
+                    outputs.canvas.put_circle(p + 3.*r/2. * v2((phase + 2.0*TAU/4.0).sin(), (phase + 2.0*TAU/4.0).cos()), r/2., 1.5, c);
+                    outputs.canvas.put_circle(p + 3.*r/2. * v2((phase + 3.0*TAU/4.0).sin(), (phase + 3.0*TAU/4.0).cos()), r/2., 1.5, c);
+                }
+                _ => outputs.canvas.put_rect(r, 1.5, enemy_colour[et]),
+            }            
+            
             let r = r.dilate_pc(-0.2);
             if r.overlaps(player_rect).is_some() && self.player_alive {
                 self.player_alive = false;
@@ -196,29 +305,39 @@ impl Demo for Game {
             }
         }
 
-        if let Some(laser_rect) = laser_rect {
-            let mut i = self.enemies_pos.len();
-            loop {
-                if i == 0 {
-                    break;
-                }
-                i -= 1;
 
-                let et = self.enemies_type[i];
-                let er = self.enemies_pos[i].rect_centered(enemy_w[et], enemy_h[et]);
+        ///////////////////////////////////////////
+        // Enemy Death
+        ///////////////////////////////////////////
+        let mut i = self.enemies_pos.len();
+        loop {
+            if i == 0 {
+                break;
+            }
+            i -= 1;
 
-                if er.right() < 0.0 || er.overlaps(laser_rect).is_some() {
-                    self.enemies_pos.swap_remove(i);
-                    self.enemies_t_last_shoot.swap_remove(i);
-                    self.enemies_v.swap_remove(i);
-                    self.enemies_dob.swap_remove(i);
-                    self.enemies_type.swap_remove(i);
-                    self.score += 1;
-                outputs.audio_events.push(SOUND_PLAY | ENEMY_DIE);
+            let et = self.enemies_type[i];
+            let er = self.enemies_pos[i].rect_centered(enemy_w[et], enemy_h[et]);
+
+            let death_by_laser = laser_rect.is_some() && laser_rect.unwrap().overlaps(er).is_some();
+
+            if er.right() < 0.0 || death_by_laser || pp_collected {
+                self.enemies_pos.swap_remove(i);
+                self.enemies_t_last_shoot.swap_remove(i);
+                self.enemies_v.swap_remove(i);
+                self.enemies_dob.swap_remove(i);
+                self.enemies_type.swap_remove(i);
+                self.score += 1;
+                if !pp_collected {
+                    outputs.audio_events.push(SOUND_PLAY | ENEMY_DIE);
                 }
             }
         }
 
+
+        ////////////////////////////
+        // Shooting
+        ////////////////////////////
         for i in 0..self.enemies_pos.len() {
             let et = self.enemies_type[i];
 
@@ -229,21 +348,28 @@ impl Demo for Game {
             }
         }
 
+
+        ///////////////////////////////
+        // Bullets
+        ///////////////////////////////
         for bullet_pos in self.bullets_pos.iter_mut() {
             bullet_pos.x -= dt * bullet_speed;
         }
-
         for bullet_pos in self.bullets_pos.iter() {
             outputs.canvas.put_rect(bullet_pos.rect_centered(bullet_w, bullet_h), 1.8, bullet_colour);
         }
-
         for bullet_pos in self.bullets_pos.iter() {
             if ptri.dilate(bullet_h).contains(*bullet_pos) {
                 self.player_alive = false;
                 outputs.audio_events.push(SOUND_PLAY | PLAYER_DIE);
             }
         }
+        self.bullets_pos.retain(|x| !ptri.dilate(bullet_h).contains(*x) && x.x > -1.0);
         
+
+        /////////////////////////////////////
+        // Interface
+        /////////////////////////////////////
         outputs.glyphs.push_str(format!("score: {}", self.score).as_str(), 0.02, 0.02, 0.03, 0.03, 2.1, Vec4::new(1.0, 1.0, 1.0, 1.0));
         if self.player_alive {
 
@@ -271,7 +397,6 @@ impl Demo for Game {
             }
         }
 
-        self.bullets_pos.retain(|x| !ptri.dilate(bullet_h).contains(*x) && x.x > -1.0);
         
         let tb = background(self.t, self.seed, 400, (inputs.screen_rect.aspect() * 400.0) as usize);
         // let tb = background(self.t, self.seed, 400, 400);

@@ -23,7 +23,7 @@ pub enum KeyStatus {
 // get rid of repeats did i do this already?
 
 #[derive(Clone)]
-pub struct FrameInputState {
+pub struct FrameInputs {
     pub screen_rect: Rect,
     pub mouse_pos: Vec2,
     pub mouse_delta: Vec2,
@@ -42,7 +42,7 @@ pub struct FrameInputState {
     pub seed: u32,
 }
 
-impl FrameInputState {
+impl FrameInputs {
     pub fn key_held(&self, keycode: VirtualKeyCode) -> bool {
         self.curr_keys.contains(&keycode)
     }
@@ -70,7 +70,7 @@ pub struct EventAggregator {
     yres: f32,
     t_last: Instant,
     instant_mouse_pos: Vec2,
-    current: FrameInputState,
+    current: FrameInputs,
 }
 
 impl EventAggregator {
@@ -80,7 +80,7 @@ impl EventAggregator {
             yres, 
             t_last: Instant::now(),
             instant_mouse_pos: Vec2::new(0.0, 0.0),
-            current: FrameInputState { 
+            current: FrameInputs { 
                 screen_rect: Rect::new(0.0, 0.0, xres/yres, 1.0, ), 
                 mouse_pos: Vec2::new(0.0, 0.0), 
                 mouse_delta: Vec2::new(0.0, 0.0), 
@@ -99,7 +99,7 @@ impl EventAggregator {
         }
     }
 
-    pub fn handle_event(&mut self, event: &Event<()>) -> Option<FrameInputState> {
+    pub fn handle_event(&mut self, event: &Event<()>) -> Option<FrameInputs> {
         match event {
             Event::WindowEvent {event, ..} => match event {
                 KeyboardInput { 

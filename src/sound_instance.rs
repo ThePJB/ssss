@@ -1,6 +1,6 @@
 use crate::kmath::*;
 
-// todo: why window isnt working + how to do it better
+// can add fstart fend reps
 
 pub const LASER: u32 = 0;
 pub const ENEMY_SHOOT: u32 = 1;
@@ -8,15 +8,16 @@ pub const PLAYER_DIE: u32 = 2;
 pub const ENEMY_DIE: u32 = 3;
 pub const ENEMY_SPAWN: u32 = 4;
 pub const LASER_POP: u32 = 5;
+pub const POWERUP: u32 = 6;
 
 const PHASE_UNIT: f32 = 2.0 * PI / 44100.0; // phase unit
-                                //   laser      eshoot  pdie    edie    espawn  lpop
-const duration: [u64; 9] =          [u64::MAX,  2500,   15000,  10000,  2500,  5000,  100, 100, 100];
-const freq_base: [f32; 9] =         [110.0,     150.0,  110.0,  880.0,  200.0,  666.0,  100.0, 100.0, 100.0];
+                                //   laser      eshoot  pdie    edie    espawn  lpop  pwrup
+const duration: [u64; 9] =          [u64::MAX,  2500,   15000,  10000,  2500,  5000,  40000, 100, 100];
+const freq_base: [f32; 9] =         [110.0,     150.0,  110.0,  880.0,  200.0,  666.0,  60.0, 100.0, 100.0];
 const freq_mult_range: [f32; 9] =   [0.0,       2.0,    0.0,    0.0,    0.0,    0.0,    0.0, 0.0, 0.0];
 const amp: [f32; 9] =               [0.1,       0.05,    0.6,    0.03,   0.0,    0.1,    0.1, 0.1, 0.1, ];
 const amp_start: [f32; 9] =         [1.0,       1.0,    1.0,    1.0,    0.0,    1.0,    1.0, 1.0, 1.0, ];
-const amp_end: [f32; 9] =           [1.0,       0.8,    0.0,    0.0,    1.0,    0.0,    1.0, 1.0, 1.0, ];
+const amp_end: [f32; 9] =           [1.0,       0.8,    0.0,    0.0,    1.0,    0.0,    0.0, 1.0, 1.0, ];
 
 pub struct SoundInstance {
     pub birth: u64,

@@ -29,7 +29,7 @@ impl FloatSlider {
         lerp(self.min, self.max, self.t)
     }
 
-    pub fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs, r: Rect) -> bool {
+    pub fn frame(&mut self, inputs: &FrameInputs, outputs: &mut FrameOutputs, r: Rect) -> bool {
         let mut any_change = false;
         if inputs.lmb == KeyStatus::JustPressed && r.contains(inputs.mouse_pos) {
             self.held = true;

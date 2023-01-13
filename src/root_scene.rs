@@ -19,7 +19,7 @@ impl RootScene {
 }
 
 impl Demo for RootScene {
-    fn frame(&mut self, inputs: &crate::kinput::FrameInputState, outputs: &mut FrameOutputs) {
+    fn frame(&mut self, inputs: &crate::kinput::FrameInputs, outputs: &mut FrameOutputs) {
         if let Some(curr) = self.curr_scene.as_mut() {
             curr.frame(inputs, outputs);
         } else {

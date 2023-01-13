@@ -1,4 +1,5 @@
 pub use std::f32::consts::PI;
+pub static TAU: f32 = PI * 2.0;
 pub static DEG_TO_RAD: f32 = 180.0 / PI;
 
 /***************************************************
@@ -95,12 +96,16 @@ pub fn noise2d(x: f32, y: f32, seed: u32) -> f32 {
 /***************************************************
  * Vec
  ***************************************************/
+ pub fn v2(x: f32, y: f32) -> Vec2 {Vec2{x,y}}
+ pub fn v3(x: f32, y: f32, z: f32) -> Vec3 {Vec3{x,y,z}}
+ pub fn v4(x: f32, y: f32, z: f32, w: f32) -> Vec4 {Vec4{x,y,z,w}}
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Vec2 {
     pub x: f32,
     pub y: f32,
 }
+
 
 impl Vec2 {
     pub const fn new(x: f32, y: f32) -> Vec2 { Vec2{x, y} }

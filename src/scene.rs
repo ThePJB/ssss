@@ -1,10 +1,10 @@
 use crate::renderers::font_rendering::*;
 use crate::renderers::mesh_renderer::MeshBuilder;
 use crate::renderers::simple_renderer::*;
-use crate::kinput::*;
 use crate::texture_buffer::*;
 use crate::kmath::*;
 use crate::audio::*;
+use crate::kinput::*;
 
 pub fn init_demo<T: Demo + Default + 'static>() -> Box<dyn Demo> {
     Box::new(T::default())
@@ -39,5 +39,5 @@ impl FrameOutputs {
 }
 
 pub trait Demo {
-    fn frame(&mut self, inputs: &FrameInputState, outputs: &mut FrameOutputs);
+    fn frame(&mut self, inputs: &FrameInputs, outputs: &mut FrameOutputs);
 }
