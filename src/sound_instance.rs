@@ -51,6 +51,28 @@ impl SoundInstance {
         let t = self.age as f32 / self.duration() as f32;
         lerp(amp_start[self.id as usize], amp_end[self.id as usize], t) * a
     }
+    // pub fn t_window(&self, transition_length: u64) -> f32 {
+    //     // let n = self.age;
+    //     // let d = self.duration();
+    //     // let t = transition_length;
+
+    //     // if n < t {
+    //     //     n as f32 / t as f32
+    //     // } else if n > (d-t) {
+    //     //     1.0 - (n - (d - t)) as f32 / t as f32
+    //     // } else {
+    //     //     1.0
+    //     // }
+
+    //     // if self.age < transition_length {
+    //     //     self.age as f32 / transition_length as f32
+    //     // } else if self.age > (self.duration() - transition_length) {
+    //     //     self.t_window((self.duration() - transition_length))
+    //     //     1.0 - (self.age - (self.duration() - transition_length)) as f32 / transition_length as f32
+    //     // } else {
+    //     //     1.0
+    //     // }
+    // }
     pub fn t_window(&self, transition_length: u64) -> f32 {
         if self.age < transition_length {
             self.age as f32 / transition_length as f32

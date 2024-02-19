@@ -429,6 +429,10 @@ fn background(t: f32, seed: u32, w: usize, h: usize) -> TextureBuffer {
         let mg_t = 1.0 * t + px_t * i as f32;
         let fg_t = 4.0 * t + px_t * i as f32;
 
+        // let mtn_bg = f1d(bg_t, seed);
+        // let mtn_mg = f1d(mg_t, seed * 1241247);
+        // let mtn_fg = f1d(fg_t, seed * 123351561);
+
         let mtn_bg = -f1d(bg_t, seed).ln();
         let mtn_mg = -f1d(mg_t, seed * 1241247).ln();
         let mtn_fg = -f1d(fg_t, seed * 123351561).ln();
@@ -459,11 +463,12 @@ fn background(t: f32, seed: u32, w: usize, h: usize) -> TextureBuffer {
     tb
 }
 
+// y t isnt changed lol?
 fn f1d(t: f32, seed: u32) -> f32 {
     1.000 * noise1d(t, seed) + 
-    0.500 * noise1d(t, seed * 14147) + 
-    0.250 * noise1d(t, seed * 141879177) + 
-    0.125 * noise1d(t, seed * 13212487) /
+    0.500 * noise1d(t*2.0, seed * 14147) + 
+    0.250 * noise1d(t*4.0, seed * 141879177) + 
+    0.125 * noise1d(t*8.0, seed * 13212487) /
     1.5875
 }
 
